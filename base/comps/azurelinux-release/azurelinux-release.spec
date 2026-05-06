@@ -39,7 +39,7 @@ Summary:        Azure Linux release files
 Name:           azurelinux-release
 Version:        4.0
 # TODO(azl): Review whether we can move back to autorelease (with conditional -p)
-Release:        14%{?dist}
+Release:        15%{?dist}
 License:        MIT
 URL:            https://aka.ms/azurelinux
 
@@ -57,6 +57,7 @@ Source20:       chrony-azure.conf
 Source21:       50-azure-cloud.conf
 Source22:       70-azurelinux-hardening.conf
 Source23:       50-client-alive-interval.conf
+Source24:       50-permit-root-login.conf
 
 BuildArch:      noarch
 
@@ -320,6 +321,8 @@ ln -s ../usr/lib/issue.net %{buildroot}%{_sysconfdir}/issue.net
 # Create /etc/issue.d
 mkdir -p %{buildroot}%{_sysconfdir}/issue.d
 
+install -Dm0600 %{SOURCE24} -t %{buildroot}%{_sysconfdir}/ssh/sshd_config.d/
+
 mkdir -p %{buildroot}%{_swidtagdir}
 
 # Create os-release files for the different variants
@@ -436,6 +439,7 @@ install -Dm0644 %{SOURCE22} -t %{buildroot}%{_sysctldir}/
 %{_sysconfdir}/swid/swidtags.d
 %{_prefix}/share/dnf5/libdnf.conf.d/20-azurelinux-defaults.conf
 %{_sysctldir}/70-azurelinux-hardening.conf
+%attr(0600,root,root) %config(noreplace) %{_sysconfdir}/ssh/sshd_config.d/50-permit-root-login.conf
 
 
 %if %{with basic}
@@ -476,6 +480,9 @@ install -Dm0644 %{SOURCE22} -t %{buildroot}%{_sysctldir}/
 
 
 %changelog
+* Fri May 08 2026 Lynsey Rydberg <lyrydber@microsoft.com> - 4.0-15
+- Add 50-permit-root-login.conf to explicitly set PermitRootLogin no
+
 * Wed May 06 2026 Reuben Olinsky <reubeno@microsoft.com> - 4.0-14
 - Add Recommends weak dependency to prefer azurelinux-repos package.
 

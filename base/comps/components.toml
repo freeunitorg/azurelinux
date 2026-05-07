@@ -2288,7 +2288,11 @@ includes = ["**/*.comp.toml", "component-check-disablement.toml"]
 [components.mosh]
 [components.motif]
 [components.mozilla-filesystem]
-[components.mozjs128]
+# [components.mozjs128] -- moved to base/comps/mozjs128/mozjs128.comp.toml
+# (Source0 strip via modify_source.sh; the modified tarball is
+#  served from the lookaside `repo` container under the
+#  `pkgs_modified/` prefix).  Kept in the distro to preserve cjs +
+#  cinnamon builds.
 [components.mozjs140]
 [components.mpdecimal]
 [components.mpfr]

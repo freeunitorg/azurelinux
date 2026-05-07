@@ -1,0 +1,98 @@
+# mozjs128: serve a modified Source0 tarball with Firefox-only
+# subtrees stripped.
+#
+# Background
+# ----------
+# `mozjs128` builds the SpiderMonkey JavaScript engine out of the
+# upstream Firefox ESR source tarball
+# (`firefox-128.11.0esr.source.tar.xz`).  Several of the artefacts
+# inside the FULL Firefox tree -- vendored Windows PE binaries
+# (NSIS plugin DLLs, 7-Zip stubs, telemetry/mozapps/mozbase test
+# fixtures, signed `msvcp140.dll`), oss-fuzz seed corpora,
+# deliberately-malformed media/image/font crash-test inputs,
+# encrypted ZIP test fixtures, and similar test data -- are
+# rejected by the automated malware scan in our package signing
+# pipeline. None of those subtrees are compiled or installed by
+# `mozjs128`:
+#
+#   * `%prep` already deletes a handful of unwanted subtrees, but
+#     the malware scanner inspects the SRPM payload (which
+#     contains Source0 verbatim), so `%prep`-time deletions are
+#     too late.
+#   * `%configure`/`%make_build`/`%make_install` all run from
+#     `js/src/`; nothing outside the keep list in
+#     `modify_source.sh` is referenced by `mozjs128`'s build.
+#
+# Source0 strip (kept consumers in mind)
+# --------------------------------------
+# A simpler "remove `mozjs128` entirely" path was considered and
+# rejected after a dependency-impact scan turned up reverse
+# dependencies that have to keep building:
+#
+#   * `specs/c/cjs/cjs.spec` L42:
+#       BuildRequires: pkgconfig(mozjs-128) >= %{mozjs128_version}
+#     L58:
+#       Requires: mozjs128%{?_isa} >= %{mozjs128_version}
+#   * `specs/c/cinnamon/cinnamon.spec` L52:
+#       BuildRequires: pkgconfig(cjs-1.0) >= %{cjs_version}
+#     L95:
+#       Requires: cjs%{?_isa} >= %{cjs_version}
+#   * `base/comps/components.toml` keeps `[components.cjs]` and
+#     `[components.cinnamon]` plus seven `cinnamon-*` packages.
+#
+# Removing `mozjs128` would therefore break the `cjs` build and
+# the entire Cinnamon desktop environment, which we want to keep.
+# The Source0 strip preserves the SpiderMonkey build artefacts
+# `cjs` and Cinnamon need (`libmozjs-128.so*`, `mozjs-128/`
+# headers, `mozjs-128.pc`) while dropping the Firefox subtrees
+# the malware scanner flags.
+#
+# Workflow
+# --------
+# The actual modification is performed by `modify_source.sh` next
+# to this TOML; the script writes its outputs to
+# `base/build/work/scratch/mozjs128/` (covered by the repository's
+# top-level `.gitignore` via `build/`), downloads the upstream
+# tarball, strips it, repacks it deterministically, and prints
+# the SHA512 of the modified artefact. Native `azldev`/TOML
+# support for source modification is tracked internally as a
+# follow-up; once that lands, both the script and the
+# modified-blob detour can be retired.
+[components.mozjs128]
+
+# Upstream Fedora dist-git ships a `sources` file with the hash of
+# the original `firefox-128.11.0esr.source.tar.xz` tarball.  Since
+# we want to serve a *modified* tarball under the SAME filename
+# (so `mozjs128.spec`'s Source0 line does not need to change), we
+# must drop the upstream `sources` file before the `source-files`
+# block below re-creates it with the modified-tarball SHA512.
+[[components.mozjs128.overlays]]
+description = "Drop upstream Fedora `sources` file so the modified-tarball SHA512 in `source-files` below replaces (rather than conflicts with) the original `firefox-128.11.0esr.source.tar.xz` entry."
+type = "file-remove"
+file = "sources"
+
+[[components.mozjs128.source-files]]
+filename = "firefox-128.11.0esr.source.tar.xz"
+# Modified-tarball SHA512, computed by `modify_source.sh` in this
+# directory.  If the script is re-run and prints a different
+# value, update both this `hash` field and the `$hash` segment in
+# the `origin.uri` below to match.
+hash = "4cec711d46502beea27d0e96e95c1de70a53139bd9c71dcc5f476815a1b3aa0bab3613f4883c33707938801660d74463b112817c4a68dc51993e2a0ad558d19f"
+hash-type = "SHA512"
+# The URI below mirrors the `lookaside-base-uri` pattern from
+# `overrides/fedora.distro.azl.sources.toml` but routes to the
+# `pkgs_modified` first path segment (instead of `pkgs`) inside
+# the same `repo` container, so the source-fetch pipeline can
+# serve the locally-modified tarball alongside upstream
+# lookaside content while keeping all locally-modified tarballs
+# trivially enumerable under one prefix.  Pattern:
+#   https://azltempstaginglookaside.blob.core.windows.net/repo/pkgs_modified/$pkg/$filename/$hashtype/$hash/$filename
+#
+# The maintainer must upload
+# `firefox-128.11.0esr-azl-mozjs-stripped.tar.xz` (produced by
+# `modify_source.sh` in this directory; its output lands at
+# `base/build/work/scratch/mozjs128/`) to the blob path encoded
+# in this URI before the component can fetch its source. The
+# script prints a ready-to-paste `az storage blob upload`
+# command for that step.
+origin = { type = "download", uri = "https://azltempstaginglookaside.blob.core.windows.net/repo/pkgs_modified/mozjs128/firefox-128.11.0esr.source.tar.xz/sha512/4cec711d46502beea27d0e96e95c1de70a53139bd9c71dcc5f476815a1b3aa0bab3613f4883c33707938801660d74463b112817c4a68dc51993e2a0ad558d19f/firefox-128.11.0esr.source.tar.xz" }

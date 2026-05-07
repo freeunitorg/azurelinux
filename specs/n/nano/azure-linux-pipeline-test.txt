@@ -1,0 +1,13 @@
+DO NOT MERGE -- pipeline test fixture for the specs-diff render-set path.
+
+Adding this file to a rendered spec dir without changing nano's .comp.toml
+exercises the new render-set logic in compute_render_set.py: the file shows
+up in 'git diff --name-only specs/', which maps it to the 'nano' component,
+and the union with azldev's component-changed output puts nano in the
+render set.
+
+The render check (check_rendered_specs.py) only looks at modified and
+deleted files, so adding a brand-new file passes cleanly while still
+proving the new code path is wired through.
+
+Drop this commit before merging anywhere.

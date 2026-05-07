@@ -4,10 +4,14 @@
 # OneBranch-specific wiring (governed templates repo, Official vs NonOfficial
 # variant, featureFlags) and delegates the actual stages/jobs/steps to the
 # raw stages template at:
-#   .github/workflows/ado/templates/sources-upload-stages.yml
+#   .github/workflows/ado/templates/control-tower-integration-stages.yml
 #
 # Authenticates via Workload Identity Federation (OIDC) and calls the Control
-# Tower prcheck API with PR context.
+# Tower APIs to:
+#   1. Upload changed component sources (prcheck).
+#   2. Submit package builds for changed components (package-build, non-PR only).
+#
+# Helper scripts live under .github/workflows/scripts/control-tower/.
 #
 # Prerequisites (ADO / Azure Portal):
 #   1. Entra ID App Registration with audience URI
@@ -59,7 +63,7 @@ extends:
         enabled: false
 
     stages:
-      - template: /.github/workflows/ado/templates/sources-upload-stages.yml@self
+      - template: /.github/workflows/ado/templates/control-tower-integration-stages.yml@self
         parameters:
           outputDirectory: $(Build.ArtifactStagingDirectory)/output
           artifactBaseName: prcheck

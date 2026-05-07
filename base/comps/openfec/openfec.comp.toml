@@ -1,0 +1,13 @@
+# Disable the auto-generated openfec-debuginfo subpackages.
+# ESRP malware scanning fires the `packer_high_entropy:eod` heuristic on the
+# compressed DWARF ELFs (usr/lib/debug/usr/lib64/libopenfec.so.1.4.2-*.debug),
+# which is an intrinsic false positive for stripped/compressed debuginfo.
+# Failing RPMs: openfec-debuginfo-1.4.2.6-7.azl4~20260420.{x86_64,aarch64}.rpm.
+# See investigation/openfec/progress.md for the full investigation.
+[components.openfec]
+
+[[components.openfec.overlays]]
+description = "Suppress *-debuginfo subpackages via `%global debug_package %{nil}` to work around ESRP malware-scan false-positive (packer_high_entropy:eod) on the compressed DWARF ELFs in openfec-debuginfo-1.4.2.6-7.azl4~20260420.{x86_64,aarch64}.rpm. Trade-off: loses post-mortem gdb/crash symbols for libopenfec.so.1.4.2. See investigation/openfec/progress.md."
+type = "spec-search-replace"
+regex = '^Name:'
+replacement = "%global debug_package %{nil}\n\nName:"

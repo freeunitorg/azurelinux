@@ -4,7 +4,7 @@
 # OneBranch-specific wiring (governed templates repo, Official vs NonOfficial
 # variant, featureFlags) and delegates the actual stages/jobs/steps to the
 # raw stages template at:
-#   .github/workflows/ado/templates/control-tower-integration-stages.yml
+#   .github/workflows/ado/templates/sources-upload-stages.yml
 #
 # Authenticates via Workload Identity Federation (OIDC) and calls the Control
 # Tower APIs to:
@@ -63,7 +63,7 @@ extends:
         enabled: false
 
     stages:
-      - template: /.github/workflows/ado/templates/control-tower-integration-stages.yml@self
+      - template: /.github/workflows/ado/templates/sources-upload-stages.yml@self
         parameters:
           outputDirectory: $(Build.ArtifactStagingDirectory)/output
           artifactBaseName: prcheck

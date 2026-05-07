@@ -1,6 +1,8 @@
 # This spec file has been modified by azldev to include build configuration overlays.
 # Do not edit manually; changes may be overwritten.
 
+%global debug_package %{nil}
+
 Name:		openfec
 Version:	1.4.2.6
 Release: 8%{?dist}

@@ -2599,9 +2599,6 @@ description = "curated per-SRPM channel-consistency exceptions"
 default-package-config.publish.rpm-channel = "rpm-sdk"
 default-package-config.publish.debuginfo-channel = "rpm-sdk-debuginfo"
 packages = [
-    # Override only the cargo-rpm-macros sub-package to sdk; the SRPM stays in
-    # base-srpm because its sibling sub-package `rust-srpm-macros` is in base.
-    "cargo-rpm-macros", # srpm: cargo-rpm-macros
     # Qt5 GUI for editing doxygen configs; pulls full Qt5 stack.
     "doxygen-doxywizard", # srpm: doxygen
     # LaTeX/PDF output backend; pulls full TeXLive (~6500 pkgs).

@@ -1,0 +1,59 @@
+# yara: serve a modified Source0 tarball with a benign-but-scanner-
+# tripping .NET-obfuscator fuzzer-corpus fixture stripped.
+#
+# An automated malware scan in the package signing pipeline rejects
+# `tests/oss-fuzz/dotnet_fuzzer_corpus/obfuscated` inside the
+# upstream `yara-4.5.4.tar.gz` tarball.  The file is a deliberately
+# obfuscated .NET binary that ships inside upstream's oss-fuzz seed
+# corpus — its purpose is to be obfuscated, as a fuzzer input for
+# YARA's own .NET parser — but it rides inside the SRPM payload that
+# the malware scanner inspects, blocking signing.
+#
+# Removal at %prep time is too late: the malware scanner inspects the
+# SRPM payload, which contains Source0 verbatim.  The fix is to
+# repack the upstream tarball with the offending file stripped and
+# serve the modified artefact via the `source-files` block below.
+#
+# `make check` / `%check` is unaffected because the upstream
+# Makefile.am does not reference `tests/oss-fuzz/**` (the oss-fuzz
+# harnesses are exercised only by libFuzzer-driven CI, not by the
+# autotools test driver).
+#
+# The actual modification is performed by `modify_source.sh` next to
+# this TOML; the script writes its outputs to
+# `base/build/work/scratch/yara/` (covered by the repository's
+# top-level `.gitignore`) and prints the deterministic SHA512 of the
+# modified tarball.  Native `azldev`/TOML support for source
+# modification is tracked internally as a follow-up; once that
+# lands, both the script and the modified-blob detour can be
+# retired.
+[components.yara]
+
+# Upstream Fedora dist-git ships a `sources` file with the hash of
+# the original `yara-4.5.4.tar.gz` tarball.  Since we want to serve
+# a *modified* tarball under the SAME filename (so the spec's
+# Source0 line does not need to change), drop the upstream
+# `sources` file before the `source-files` block below re-creates
+# it with the modified-tarball SHA512.
+[[components.yara.overlays]]
+description = "Drop upstream Fedora `sources` file so the modified-tarball SHA512 in `source-files` below replaces (rather than conflicts with) the original `yara-4.5.4.tar.gz` entry."
+type = "file-remove"
+file = "sources"
+
+[[components.yara.source-files]]
+filename = "yara-4.5.4.tar.gz"
+hash = "57d3388dc9a84f58769679e26624be852d7c83e403ed60a21ae3ba4e1da9162dbc9bacf53d439793df67f4bc6a7fd38d600f10052df2e62255aed50687d2754a"
+hash-type = "SHA512"
+# The URI below mirrors the `lookaside-base-uri` pattern from
+# `overrides/fedora.distro.azl.sources.toml` but routes to the
+# `pkgs_modified` first path segment (instead of `pkgs`) inside
+# the same `repo` container, so the source-fetch pipeline can
+# serve the locally-modified tarball alongside upstream lookaside
+# content while keeping all locally-modified tarballs trivially
+# enumerable under one prefix.  Pattern:
+#   https://azltempstaginglookaside.blob.core.windows.net/repo/pkgs_modified/$pkg/$filename/$hashtype/$hash/$filename
+# The maintainer must upload `yara-4.5.4-azl-stripped.tar.gz`
+# (produced by `modify_source.sh` in this directory; its output
+# lands at `base/build/work/scratch/yara/`) to this blob path
+# before the component can fetch its source.
+origin = { type = "download", uri = "https://azltempstaginglookaside.blob.core.windows.net/repo/pkgs_modified/yara/yara-4.5.4.tar.gz/sha512/57d3388dc9a84f58769679e26624be852d7c83e403ed60a21ae3ba4e1da9162dbc9bacf53d439793df67f4bc6a7fd38d600f10052df2e62255aed50687d2754a/yara-4.5.4.tar.gz" }

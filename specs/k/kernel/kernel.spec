@@ -198,9 +198,6 @@ Summary: The Linux kernel
 
 #
 # End of genspec.sh variables
-
-# AZL: kmod subpackage framework
-%include %{_sourcedir}/kmod-macros.inc
 #
 
 %define pkg_release %{specrelease}
@@ -1177,7 +1174,6 @@ Source9999: kernel.azl.macros
 Source5000: 6.18-x86_64-azl.config
 Source5001: 6.18-aarch64-azl.config
 Source5002: azurelinux-ca-20230216.pem
-Source5999: kmod-macros.inc
 Source6000: open-gpu-kernel-modules-%{nvidia_open_version}.tar.gz
 Source6001: kmod-nvidia-open-modprobe.conf
 Source6002: kmod-nvidia-open.inc

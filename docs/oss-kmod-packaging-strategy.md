@@ -28,7 +28,6 @@ kernel.comp.toml
 
 | File | Purpose |
 |------|---------|
-| `kmod-macros.inc` | Framework documentation and `%global kmod_subpackages` registry |
 | `kmod-<name>.inc` | Self-contained subpackage definition with phase-gated `%if` blocks |
 | `kmod-<name>.conf` | Module loading configuration (blacklists, options) |
 | `kernel.comp.toml` | Overlay definitions that wire everything together |
@@ -140,15 +139,7 @@ lines = [
 # ... repeat for prep, build, install, files ...
 ```
 
-### 5. Register in kmod-macros.inc
-
-Add the name to the `kmod_subpackages` list:
-
-```spec
-%global kmod_subpackages nvidia-open <name>
-```
-
-### 6. Validate
+### 5. Validate
 
 ```bash
 azldev comp render -p kernel          # Check overlays apply cleanly

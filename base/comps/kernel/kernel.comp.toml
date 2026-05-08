@@ -178,31 +178,7 @@ lines = [
 #   4. Add spec-search-replace overlays targeting the AZL-KMOD-*-ANCHOR
 #      sentinels for each phase (the anchor survives replacement so the
 #      next kmod can chain onto it)
-#   5. Register the name in kmod_subpackages in kmod-macros.inc
 # ============================================================================
-
-# --- kmod framework registration ---
-
-[[components.kernel.overlays]]
-description = "Add kmod-macros.inc framework file to sources"
-type = "file-add"
-file = "kmod-macros.inc"
-source = "kmod-macros.inc"
-
-[[components.kernel.overlays]]
-description = "Register kmod-macros.inc as Source5999"
-type = "spec-insert-tag"
-tag = "Source5999"
-value = "kmod-macros.inc"
-
-[[components.kernel.overlays]]
-description = "Include kmod-macros.inc framework after genspec variables — defines kmod_subpackages list"
-type = "spec-search-replace"
-regex = "# End of genspec.sh variables"
-replacement = """# End of genspec.sh variables
-
-# AZL: kmod subpackage framework
-%include %{_sourcedir}/kmod-macros.inc"""
 
 # --- kmod-nvidia-open: source file registration ---
 # Registers the NVIDIA open GPU kernel module sources and configuration files.

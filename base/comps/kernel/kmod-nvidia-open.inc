@@ -8,25 +8,32 @@
 #   SOURCE6000           — open-gpu-kernel-modules tarball
 #   SOURCE6001           — kmod-nvidia-open-modprobe.conf
 
+# Sanitize KVERREL for use in RPM package names and file paths that become
+# part of package names — RPM forbids '~' in Name but KVERREL may contain it
+# (e.g. 6.18.5-1.9.azl4~20260504.x86_64). Raw %{KVERREL} is kept for
+# /lib/modules/ paths and depmod where the kernel expects the unsanitized form.
+%global _kmod_kverrel %(echo "%{KVERREL}" | tr '~' '_')
+
 # =========================================================================
 # Phase: package — subpackage declaration
 # =========================================================================
 %if "%{_kmod_phase}" == "package" && %{with_up_base}
 
 %ifarch x86_64 aarch64
-%package -n kmod-%{_kmod_name}-%{KVERREL}
+%package -n kmod-%{_kmod_name}-%{_kmod_kverrel}
 Summary:        NVIDIA open GPU kernel modules (driver %{nvidia_open_version})
 # NOTE: Version is inherited from kernel (%{version}), NOT nvidia_open_version.
 # Track the actual NVIDIA driver version via Provides for dependency resolution.
 Provides:       nvidia-open-kmod-version = %{nvidia_open_version}
 Provides:       kmod-%{_kmod_name} = %{version}-%{release}
+Provides:       kmod-%{_kmod_name}-%{KVERREL} = %{version}-%{release}
 Requires:       %{name}-core-uname-r = %{KVERREL}
 Requires(post): kmod
 Requires(postun): kmod
 Conflicts:      nvidia-closed-kmod
 Conflicts:      nvidia-open
 
-%description -n kmod-%{_kmod_name}-%{KVERREL}
+%description -n kmod-%{_kmod_name}-%{_kmod_kverrel}
 Open-source NVIDIA GPU kernel modules (driver version %{nvidia_open_version})
 built from the official NVIDIA/open-gpu-kernel-modules repository for
 kernel %{KVERREL}.
@@ -96,10 +103,10 @@ for mod in nvidia nvidia-modeset nvidia-drm nvidia-uvm nvidia-peermem; do
     install -m 0644 "${ko}" %{buildroot}/lib/modules/%{KVERREL}/extra/nvidia/
 done
 # Install modprobe config to blacklist conflicting modules
-install -D -m 0644 %{SOURCE6001} %{buildroot}%{_sysconfdir}/modprobe.d/kmod-%{_kmod_name}-%{KVERREL}.conf
+install -D -m 0644 %{SOURCE6001} %{buildroot}%{_sysconfdir}/modprobe.d/kmod-%{_kmod_name}-%{_kmod_kverrel}.conf
 # Install depmod override config
 install -d %{buildroot}%{_sysconfdir}/depmod.d
-cat > %{buildroot}%{_sysconfdir}/depmod.d/kmod-%{_kmod_name}-%{KVERREL}.conf << 'DEPMOD_EOF'
+cat > %{buildroot}%{_sysconfdir}/depmod.d/kmod-%{_kmod_name}-%{_kmod_kverrel}.conf << 'DEPMOD_EOF'
 override nvidia %{KVERREL} extra/nvidia
 override nvidia-modeset %{KVERREL} extra/nvidia
 override nvidia-drm %{KVERREL} extra/nvidia
@@ -108,7 +115,7 @@ override nvidia-peermem %{KVERREL} extra/nvidia
 DEPMOD_EOF
 # Install NVIDIA license file
 install -D -m 0644 %{_builddir}/open-gpu-kernel-modules-%{nvidia_open_version}/COPYING \
-    %{buildroot}%{_datadir}/licenses/kmod-%{_kmod_name}-%{KVERREL}/COPYING
+    %{buildroot}%{_datadir}/licenses/kmod-%{_kmod_name}-%{_kmod_kverrel}/COPYING
 %endif
 
 %endif
@@ -119,21 +126,21 @@ install -D -m 0644 %{_builddir}/open-gpu-kernel-modules-%{nvidia_open_version}/C
 %if "%{_kmod_phase}" == "files" && %{with_up_base}
 
 %ifarch x86_64 aarch64
-%post -n kmod-%{_kmod_name}-%{KVERREL}
+%post -n kmod-%{_kmod_name}-%{_kmod_kverrel}
 %{_sbindir}/depmod -a %{KVERREL} || :
 
-%postun -n kmod-%{_kmod_name}-%{KVERREL}
+%postun -n kmod-%{_kmod_name}-%{_kmod_kverrel}
 %{_sbindir}/depmod -a %{KVERREL} || :
 
-%files -n kmod-%{_kmod_name}-%{KVERREL}
-%license %{_datadir}/licenses/kmod-%{_kmod_name}-%{KVERREL}/COPYING
+%files -n kmod-%{_kmod_name}-%{_kmod_kverrel}
+%license %{_datadir}/licenses/kmod-%{_kmod_name}-%{_kmod_kverrel}/COPYING
 /lib/modules/%{KVERREL}/extra/nvidia/nvidia.ko.%{compext}
 /lib/modules/%{KVERREL}/extra/nvidia/nvidia-modeset.ko.%{compext}
 /lib/modules/%{KVERREL}/extra/nvidia/nvidia-drm.ko.%{compext}
 /lib/modules/%{KVERREL}/extra/nvidia/nvidia-uvm.ko.%{compext}
 /lib/modules/%{KVERREL}/extra/nvidia/nvidia-peermem.ko.%{compext}
-%config(noreplace) %{_sysconfdir}/modprobe.d/kmod-%{_kmod_name}-%{KVERREL}.conf
-%{_sysconfdir}/depmod.d/kmod-%{_kmod_name}-%{KVERREL}.conf
+%config(noreplace) %{_sysconfdir}/modprobe.d/kmod-%{_kmod_name}-%{_kmod_kverrel}.conf
+%{_sysconfdir}/depmod.d/kmod-%{_kmod_name}-%{_kmod_kverrel}.conf
 %endif
 
 %endif

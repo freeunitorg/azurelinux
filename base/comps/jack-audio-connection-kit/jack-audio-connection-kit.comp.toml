@@ -1,0 +1,17 @@
+[components.jack-audio-connection-kit]
+
+# AZL does not ship opus — remove the BR and explicitly disable opus.
+
+[[components.jack-audio-connection-kit.overlays]]
+description = "Remove opus-devel BuildRequires (opus not available in AZL)"
+type = "spec-remove-tag"
+tag = "BuildRequires"
+value = "opus-devel"
+
+[[components.jack-audio-connection-kit.overlays]]
+description = "Disable opus support in waf configure"
+type = "spec-search-replace"
+section = "%build"
+regex = '   --alsa'
+replacement = """   --no-opus \\
+   --alsa"""

@@ -46,7 +46,6 @@ BuildRequires: libffado-devel
 BuildRequires: libsamplerate-devel
 BuildRequires: libsndfile-devel
 BuildRequires: ncurses-devel
-BuildRequires: opus-devel
 BuildRequires: pkgconfig
 BuildRequires: python3
 
@@ -110,6 +109,7 @@ python3 ./waf configure \
    --firewire \
 %endif
 %endif
+   --no-opus \
    --alsa \
    --clients 256 \
    --ports-per-application=2048

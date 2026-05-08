@@ -1,7 +1,7 @@
 [components.openfec]
 
 [[components.openfec.overlays]]
-description = "Suppress *-debuginfo subpackages via `%global debug_package %{nil}` to work around ESRP malware-scan false-positive (packer_high_entropy:eod) on the compressed DWARF ELFs in openfec-debuginfo-1.4.2.6-7.azl4~20260420.{x86_64,aarch64}.rpm. Trade-off: loses post-mortem gdb/crash symbols for libopenfec.so.1.4.2."
+description = "Suppress *-debuginfo subpackages via `%global debug_package %{nil}` to work around an automated malware-scan false-positive (high-entropy heuristic) on the compressed DWARF ELFs in the openfec-debuginfo-*.rpm artefacts. Trade-off: loses post-mortem gdb/crash symbols for libopenfec.so.1.4.2."
 type = "spec-search-replace"
 regex = '^Name:'
 replacement = "%global debug_package %{nil}\n\nName:"

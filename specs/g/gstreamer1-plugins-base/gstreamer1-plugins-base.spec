@@ -48,7 +48,6 @@ BuildRequires:  libXv-devel
 BuildRequires:  orc-devel >= 0.4.18
 BuildRequires:  pango-devel
 BuildRequires:  pkgconfig
-BuildRequires:  opus-devel
 BuildRequires:  gdk-pixbuf2-devel
 BuildRequires:  gtk3-devel
 BuildRequires:  libjpeg-turbo-devel
@@ -137,6 +136,7 @@ for the GStreamer Base Plugins library.
   %{!?with_libvisual:-D libvisual=disabled} \
   -D doc=disabled \
   -D orc=enabled \
+  -D opus=disabled \
   -D tremor=disabled \
   -D tests=disabled \
   -D examples=disabled
@@ -301,7 +301,7 @@ chrpath --delete $RPM_BUILD_ROOT%{_bindir}/gst-play-1.0
 %{_libdir}/gstreamer-%{majorminor}/libgstlibvisual.so
 %endif
 %{_libdir}/gstreamer-%{majorminor}/libgstogg.so
-%{_libdir}/gstreamer-%{majorminor}/libgstopus.so
+
 %{_libdir}/gstreamer-%{majorminor}/libgstpango.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttheora.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvorbis.so

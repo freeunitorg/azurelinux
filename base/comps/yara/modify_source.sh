@@ -48,15 +48,9 @@
 #   yara-4.5.4-azl-stripped.tar.gz
 #   yara-4.5.4-azl-stripped.tar.gz.sha512
 #
-# After running:
-#   1. Upload `yara-4.5.4-azl-stripped.tar.gz` as the blob payload at
-#      the lookaside URL pattern (modified container) for filename
-#      `yara-4.5.4.tar.gz`.  The exact URL is printed by this script.
-#   2. The `hash` and `origin.uri` fields in
-#      `base/comps/yara/yara.comp.toml` are already populated for the
-#      SHA512 produced by this script; if your run produces a
-#      different SHA512, update both the `source-files.hash` value and
-#      the URI's `$hash` path segment to the new value.
+# After running upload `yara-4.5.4-azl-stripped.tar.gz` as the blob payload at
+# the lookaside URL pattern (modified container) for filename
+# `yara-4.5.4.tar.gz`.  The exact URL is printed by this script.
 
 set -euo pipefail
 
@@ -66,17 +60,11 @@ ORIGINAL_SHA512="b1da40636f9e55bb07cc911479e6dfa8dc7a4fa3f6b9f10b9f669d741d7af51
 MODIFIED_NAME="yara-4.5.4-azl-stripped.tar.gz"
 EXTRACTED_DIRNAME="yara-4.5.4"
 
-# Files to remove from the upstream tarball.  Keep this list explicit and
-# short so the rationale is always auditable.
+# Files to remove from the upstream tarball.
 declare -a STRIP_PATHS=(
     "${EXTRACTED_DIRNAME}/tests/oss-fuzz/dotnet_fuzzer_corpus/obfuscated"
 )
 
-# Resolve the script's own directory, then walk up to the repo root so
-# the work directory lands at base/build/work/scratch/yara/ no matter
-# where the script is invoked from.  Layout:
-#   <repo-root>/base/comps/yara/modify_source.sh           <- this script
-#   <repo-root>/base/build/work/scratch/yara/              <- WORKDIR
 SCRIPT_DIR="$(cd "$(dirname "$(realpath "$0")")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 WORKDIR="${REPO_ROOT}/base/build/work/scratch/yara"
@@ -122,30 +110,32 @@ tar --sort=name \
 MODIFIED_SHA512=$(sha512sum "${MODIFIED_NAME}" | awk '{print $1}')
 echo "${MODIFIED_SHA512}  ${MODIFIED_NAME}" > "${MODIFIED_NAME}.sha512"
 
-echo
-echo "================================================================"
-echo "DONE"
-echo "  modified tarball: ${WORKDIR}/${MODIFIED_NAME}"
-echo "  SHA512:           ${MODIFIED_SHA512}"
-echo "================================================================"
-echo
-echo "Next steps:"
-echo "  1. Make sure you are logged in to Azure (one-time per shell):"
-echo "       az login"
-echo "  2. Upload the modified tarball with this ready-to-paste command"
-echo "     (uploads to the lookaside 'repo' container under the"
-echo "     'pkgs_modified/' prefix at the exact path"
-echo "     base/comps/yara/yara.comp.toml's source-files.origin.uri expects):"
-echo
-echo "       az storage blob upload \\"
-echo "           --auth-mode login \\"
-echo "           --account-name azltempstaginglookaside \\"
-echo "           --container-name repo \\"
-echo "           --name \"pkgs_modified/yara/yara-4.5.4.tar.gz/sha512/${MODIFIED_SHA512}/yara-4.5.4.tar.gz\" \\"
-echo "           --file \"${WORKDIR}/${MODIFIED_NAME}\""
-echo
-echo "  3. The hash + URI in base/comps/yara/yara.comp.toml are"
-echo "     already populated for SHA512 ${MODIFIED_SHA512:0:16}...; if the"
-echo "     SHA512 above does NOT match, update both the source-files.hash"
-echo "     value, the URI's \$hash path segment, and the --name argument"
-echo "     in the upload command above to the new value."
+cat <<EOF
+
+================================================================
+DONE
+  modified tarball: ${WORKDIR}/${MODIFIED_NAME}
+  SHA512:           ${MODIFIED_SHA512}
+================================================================
+
+Next steps:
+  1. Make sure you are logged in to Azure (one-time per shell):
+       az login
+  2. Upload the modified tarball with this ready-to-paste command
+     (uploads to the lookaside 'repo' container under the
+     'pkgs_modified/' prefix at the exact path
+     base/comps/yara/yara.comp.toml's source-files.origin.uri expects):
+
+       az storage blob upload \\
+           --auth-mode login \\
+           --account-name azltempstaginglookaside \\
+           --container-name repo \\
+           --name "pkgs_modified/yara/yara-4.5.4.tar.gz/sha512/${MODIFIED_SHA512}/yara-4.5.4.tar.gz" \\
+           --file "${WORKDIR}/${MODIFIED_NAME}"
+
+  3. The hash + URI in base/comps/yara/yara.comp.toml are
+     already populated for SHA512 ${MODIFIED_SHA512:0:16}...; if the
+     SHA512 above does NOT match, this means the regeneration was not deterministic.
+     This requires further investigation and the comp TOML must NOT be updated with
+     the new hash/URI until the root cause of non-determinism is identified and resolved.
+EOF

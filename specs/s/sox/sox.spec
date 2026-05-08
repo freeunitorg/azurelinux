@@ -78,7 +78,7 @@ BuildRequires: libvorbis-devel
 BuildRequires: alsa-lib-devel, libtool-ltdl-devel, libsamplerate-devel
 BuildRequires: gsm-devel, wavpack-devel, ladspa-devel, libpng-devel
 BuildRequires: flac-devel, libao-devel, libsndfile-devel, libid3tag-devel
-BuildRequires: pulseaudio-libs-devel, opusfile-devel
+BuildRequires: pulseaudio-libs-devel
 BuildRequires: libtool, libmad-devel, lame-devel, twolame-devel
 
 %description

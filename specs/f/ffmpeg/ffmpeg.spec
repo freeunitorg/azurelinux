@@ -225,7 +225,6 @@ BuildRequires:  pkgconfig(openal)
 BuildRequires:  pkgconfig(opencore-amrnb)
 BuildRequires:  pkgconfig(OpenCL)
 BuildRequires:  pkgconfig(openh264)
-BuildRequires:  pkgconfig(opus)
 BuildRequires:  pkgconfig(rav1e)
 BuildRequires:  pkgconfig(rubberband)
 BuildRequires:  pkgconfig(sdl2)
@@ -828,7 +827,7 @@ cp -a doc/examples/{*.c,Makefile,README} _doc/examples/
     --enable-libopenh264 \
     --enable-libopenjpeg \
     --enable-libopenmpt \
-    --enable-libopus \
+    --disable-libopus \
 %if %{with placebo}
     --enable-libplacebo \
 %endif

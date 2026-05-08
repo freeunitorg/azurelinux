@@ -89,7 +89,6 @@ BuildRequires:  pkgconfig(libva-x11)
 BuildRequires:  pkgconfig(libwebp)
 BuildRequires:  pkgconfig(libwebpmux)
 BuildRequires:  pkgconfig(openssl)
-BuildRequires:  pkgconfig(opus)
 BuildRequires:  pkgconfig(orc-0.4)
 BuildRequires:  pkgconfig(sbc)
 BuildRequires:  pkgconfig(sndfile)
@@ -422,6 +421,7 @@ aren't tested well enough, or the code is not of good enough quality.
     -D wasapi=disabled -D wasapi2=disabled \
     -D wpe=disabled \
     -D x11=disabled \
+    -D opus=disabled \
     -D x265=disabled \
     %{nil}
 
@@ -657,7 +657,7 @@ EOF
 %{_libdir}/gstreamer-%{majorminor}/libgstlc3.so
 %{_libdir}/gstreamer-%{majorminor}/libgstnvcodec.so
 %{_libdir}/gstreamer-%{majorminor}/libgstopenjpeg.so
-%{_libdir}/gstreamer-%{majorminor}/libgstopusparse.so
+
 %{_libdir}/gstreamer-%{majorminor}/libgstresindvd.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrsvg.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsbc.so

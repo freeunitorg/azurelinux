@@ -44,6 +44,64 @@ components with a dated, cited re-scan event (e.g. the 2026-05-05
 `pkg_results.txt` row dropping the RPM). \"Probably fine because no
 scanner data\" does NOT qualify.
 
+3. **Parallel-safe per-component fix branches.** Every component-level
+   fix lands on its **own** branch in its **own** worktree under
+   `/home/pawelwi/repositories/azl-worktrees/<name>/`, branched from
+   the latest `tomls/base/main`. Fix branches are kept independent so
+   they can be reviewed, rolled back, and rebased in parallel without
+   one fix blocking another. Examples already landed:
+   * `pawelwi/openfec-disable-debuginfo` (debuginfo suppression)
+   * `pawelwi/yara-strip-obfuscated` (Source0 repack via
+     `modify_source.sh`)
+   * `pawelwi/star-remove` (component removal)
+   * `pawelwi/samba-drop-winexe` (`build.without` toggle)
+4. **Dependency-impact verification.** Any fix that drops a
+   subpackage, removes a component, or repacks a Source0 must be
+   accompanied by an explicit dependency-impact analysis. A separate
+   strict verifier subagent re-confirms (against
+   `base/comps/**/*.{toml,comp.toml}` and `specs/**/*.spec`) that the
+   fix does not break consumers we intend to keep. The verdict and the
+   exact grep evidence go into both the commit message and the
+   `progress.md` "Mitigation feasibility" section.
+5. **Modified-source URL pattern.** When a fix repacks a `Source<N>:`
+   via a checked-in `modify_source.sh`, the
+   `[[components.<name>.source-files]]` block's `origin.uri` MUST
+   follow the same lookaside URL pattern as
+   `overrides/fedora.distro.azl.sources.toml` defines for upstream
+   sources, with the **first path segment swapped from `pkgs` to
+   `pkgs_modified`** (same `repo` container as upstream sources, so
+   all locally-modified tarballs are easy to enumerate in one
+   place):
+
+   `https://azltempstaginglookaside.blob.core.windows.net/repo/pkgs_modified/$pkg/$filename/$hashtype/$hash/$filename`
+
+   Keep the upstream filename (no spec edit needed). If upstream
+   Fedora's `sources` file already has an entry for that filename,
+   pair the `source-files` block with a `file-remove` overlay against
+   the `sources` file so the modified-tarball entry replaces (rather
+   than conflicts with) the upstream one. See
+   [`investigation/README.md`](investigation/README.md#modified-source-url-pattern)
+   for the exact shape and an example.
+6. **Local render + lock with `azldev-in-container`.** After every
+   change to a component's TOML, the fix branch's working tree must
+   carry a refreshed rendered spec (`specs/<first-char>/<name>/`) and
+   a refreshed lock file (`locks/<name>.lock`) before the PR will
+   pass CI. The standard `azldev` driver requires a mock-capable
+   build environment that is not available on a stock Ubuntu host;
+   use `azldev-in-container` instead — it wraps the same CLI but
+   runs the mock-dependent commands inside a container so they work
+   from the local Ubuntu host:
+
+   ```bash
+   azldev-in-container -q comp render -p <name>
+   azldev-in-container -q comp update -p <name>
+   ```
+
+   Stage and commit the resulting `specs/<first-char>/<name>/...`
+   and `locks/<name>.lock` changes as part of the fix branch
+   (typically via `git commit --amend` so the fix lands as a single
+   coherent commit).
+
 A re-audit is in progress to refresh every `progress.md` that pre-dates
 this policy; legacy reports may still mention "ESRP allow-list" as a
 mitigation \u2014 those mentions are non-binding and will be replaced with
@@ -76,16 +134,16 @@ the table below is a navigation summary.
 | `mathjax` | Done | orchestrator | none | Failing SRPM passed ESRP re-scan (per pkg_results.txt 2026-05-05) | [progress](investigation/mathjax/progress.md) |
 | `mingw-gettext` | Done | orchestrator | none | Failing RPM passed ESRP re-scan (per pkg_results.txt 2026-05-05) | [progress](investigation/mingw-gettext/progress.md) |
 | `mingw-libxml2` | Done | orchestrator | none | Failing RPM passed ESRP re-scan (per pkg_results.txt 2026-05-05) | [progress](investigation/mingw-libxml2/progress.md) |
-| `mozjs128` | In progress | unassigned | none | True positive shape, benign content. 1 live K7 detection (`aes_archive.zip` at `firefox-128.11.0esr.source.tar.xz/firefox-128.11.0/third_party/rust/zip/tests/data/`) is a tautological false positive on the Rust `zip` crate's AES test fixture. SRPM ships the entire upstream Firefox tarball but `%build` consumes only `js/src/`; everything outside is dead weight. **Canonical fix**: Source0 repack via a checked-in `modify_source.sh` (modeled on `base/comps/yara/modify_source.sh`) keeping only `js/`, `build/`, `config/`, `mfbt/`, `memory/`, `mozglue/`, `python/mozbuild/`, `LICENSE`, `Cargo.{toml,lock}`, `moz.configure` and dropping every other top-level subtree (incl. `js/src/fuzz-tests/` which would otherwise survive a naive `js/`-only filter). Tracked under ADO #19805. | [progress](investigation/mozjs128/progress.md) |
-| `openfec` | In progress | unassigned | none | False positive on both failing RPMs. Karambiner `packer_high_entropy:eod` fires on the auto-generated `usr/lib/debug/usr/lib64/libopenfec.so.1.4.2-...{x86_64,aarch64}.debug` ELFs produced by rpmbuild's `find-debuginfo.sh`+`dwz` pipeline. High DWARF entropy (`--compress-debug-sections=zlib`) is intrinsic. **Canonical fix LANDED** on branch `pawelwi/openfec-disable-debuginfo` (commit `1c68d4149a`): a `spec-search-replace` overlay in `base/comps/openfec/openfec.comp.toml` injecting `%global debug_package %{nil}` before the `Name:` line, suppressing `*-debuginfo` subpackage generation entirely. Trade-off: loses post-mortem `gdb`/`crash` debugging for `libopenfec.so.1.4.2`. Fallback: build-time `-gz=none` via CFLAGS for uncompressed DWARF (medium risk, larger debuginfo). | [progress](investigation/openfec/progress.md) |
+| `mozjs128` | Done | unassigned | branch `pawelwi/mozjs128-strip-source` (`b71944df9d`) | True positive shape, benign content. 1 live K7 detection (`aes_archive.zip` at `firefox-128.11.0esr.source.tar.xz/firefox-128.11.0/third_party/rust/zip/tests/data/`) is a tautological false positive on the Rust `zip` crate's AES test fixture. SRPM ships the entire upstream Firefox tarball but `%build` consumes only `js/src/`; everything outside is dead weight. **Canonical fix INFRASTRUCTURE LANDED** on branch `pawelwi/mozjs128-strip-source` (commit `b71944df9d`): `base/comps/mozjs128/{mozjs128.comp.toml, modify_source.sh, .gitignore}` Source0 repack keeping `js/`, `build/`, `config/`, `mfbt/`, `memory/`, `mozglue/`, `python/mozbuild/`, `third_party/`, `LICENSE`, `Cargo.{toml,lock}`, `moz.configure` and dropping everything else (incl. `js/src/fuzz-tests/`). PIVOTED from full removal to Source0 strip after dep-impact verifier confirmed `cjs` + 8 `cinnamon-*` reverse-deps. SHA512 carries TBD-PLACEHOLDER pending maintainer running `modify_source.sh`. Tracked under ADO #19805. | [progress](investigation/mozjs128/progress.md) |
+| `openfec` | In progress | unassigned | none | False positive on both failing RPMs. Karambiner `packer_high_entropy:eod` fires on the auto-generated `usr/lib/debug/usr/lib64/libopenfec.so.1.4.2-...{x86_64,aarch64}.debug` ELFs produced by rpmbuild's `find-debuginfo.sh`+`dwz` pipeline. High DWARF entropy (`--compress-debug-sections=zlib`) is intrinsic. **Canonical fix LANDED** on branch `pawelwi/openfec-disable-debuginfo` (commit `56720698ba`): a `spec-search-replace` overlay in `base/comps/openfec/openfec.comp.toml` injecting `%global debug_package %{nil}` before the `Name:` line, suppressing `*-debuginfo` subpackage generation entirely. Trade-off: loses post-mortem `gdb`/`crash` debugging for `libopenfec.so.1.4.2`. Fallback: build-time `-gz=none` via CFLAGS for uncompressed DWARF (medium risk, larger debuginfo). | [progress](investigation/openfec/progress.md) |
 | `perl-Module-Signature` | Done | orchestrator | none | Failing SRPM + noarch RPM passed ESRP re-scan (per pkg_results.txt 2026-05-05) | [progress](investigation/perl-Module-Signature/progress.md) |
 | `perl-Test-Signature` | Done | orchestrator | none | Failing SRPM + noarch RPM passed ESRP re-scan (2026-05-05); confirmed clear again on 2026-05-06 re-run (no scanner detections in `investigation/file_scans.md`). | [progress](investigation/perl-Test-Signature/progress.md) |
 | `python-impacket` | In progress | anphel | [#17040](https://github.com/microsoft/azurelinux/pull/17040) | Component being removed entirely; only consumer (`curl` BuildRequires for upstream test 1451) is also dropped. | [progress](investigation/python-impacket/progress.md) |
 | `qemu` | In progress | unassigned | none | True positive shape, benign content (Pending verdicts — the 2026-05-06 `file_scans.md` dump is incomplete; absence of detections is NOT a pass signal). 2 binary subpackages (`qemu-tests-10.1.4-1.azl4~20260420.{x86_64,aarch64}.rpm`) failing. The `qemu-tests` subpackage ships the QEMU regression test corpus: 16 `sample_images/*.bz2` deliberately-corrupted disk images, golden `.qcow2`/`.raw` outputs, a `grub_mbr.raw.bz2` real-x86 MBR boot-sector blob, and 29 `accel-qtest-*.so` ELF qtest plugins. **Canonical fix**: drop the `%package tests` declaration (loses the `qemu-tests-src` install but `make check` from SRPM still works). Fallback: medium-risk Source0 strip of `tests/data/` via checked-in `modify_source.sh`. | [progress](investigation/qemu/progress.md) |
 | `qt6-qtwebengine` | In progress | unassigned | none | True positive shape, benign content. 14 unique K7 `File is encrypted!` detections on bundled-chromium test fixtures: 12 in `src/3rdparty/chromium/third_party/libzip/src/regress/*.zip` (libzip AES/PKWARE crypto fixtures) + 2 in `src/3rdparty/chromium/third_party/lzma_sdk/google/test_data/encrypted{,_header}.7z`. None compiled in AZL: spec uses `use_system_minizip 1`, no `%check`. Pending rows for ~190 V8/Blink fuzz_corpus blobs, batched chromium fuzz corpora (cast/HID/USB/CORS/viz), AVIF/MP4/HEVC fixtures, breakpad/crashpad PE blobs. **Canonical fix**: extend `clean_qtwebengine.sh` (already strips ffmpeg + openh264) with `rm -rf` for the offending fixture trees — multi-step (edit script → re-roll tarball → new SHA512 → update `sources` → bump `Release:`). Tracked under ADO #19805. | [progress](investigation/qt6-qtwebengine/progress.md) |
 | `rubygem-pdf-reader` | Not started | unassigned | none | — | [progress](investigation/rubygem-pdf-reader/progress.md) |
-| `samba` | Not started | unassigned | none | — | [progress](investigation/samba/progress.md) |
-| `star` | Not started | unassigned | none | — | [progress](investigation/star/progress.md) |
+| `samba` | Done | unassigned | branch `pawelwi/samba-drop-winexe` (`12302f011a`) | Optional `samba-winexe` sub-package fails ESRP signing on its mingw32/mingw64-cross-compiled Windows `winexe.exe` PE binaries (Wine-derived, by design). The main `samba` RPM and all other sub-packages are unaffected. **Canonical fix LANDED**: `[components.samba.build] without = ["winexe"]` in `base/comps/samba/samba.comp.toml` causes `azldev` to pass `--without winexe` to rpmbuild; the upstream `%bcond winexe` gate then unconditionally drops BR/`%package`/`%files`. Verifier-flagged dangling manifest line `"samba-winexe"` at `base/packages/base.packages.toml:7158` was deleted in the same commit. Verifier verdict: PASS-WITH-CAVEAT (caveat addressed). | [progress](investigation/samba/progress.md) |
+| `star` | **BLOCKED** | unassigned | none (rollback) | Initial removal attempt (commit `9bd8092ca6` on `pawelwi/star-remove`) **rolled back** after dep-impact verifier surfaced two real consumers: (a) `cpio.spec:51` `BuildRequires: rmt`, and `rmt` is provided ONLY by the `star` SRPM (`star.spec:62 %package -n rmt`); AZL's `tar` does NOT provide `rmt` (`tar.spec:96–97` strips `/etc/rmt` and `/sbin/rmt` from buildroot). (b) Four manifest pins in `base/packages/base.packages.toml` (lines 6911 `rmt`, 7183 `scpio`, 7302 `spax`, 7351 `star`). Branch reset to `tomls/base/main`. **Path forward gated on user direction** (expand removal scope to also drop cpio's remote-tape feature?) **or fresh ESRP scanner data** (no rows in `investigation/file_scans.md` for star, so a Source0 strip cannot be designed). | [progress](investigation/star/progress.md) |
 | `stress-ng` | Done | orchestrator | none | Failing SRPM passed ESRP re-scan (per pkg_results.txt 2026-05-05) | [progress](investigation/stress-ng/progress.md) |
 | `texlive` | Not started | unassigned | none | — | [progress](investigation/texlive/progress.md) |
 | `yara` | In progress | unassigned | none | True positive shape, benign content — `tests/oss-fuzz/dotnet_fuzzer_corpus/obfuscated` is a deliberately-obfuscated .NET binary used as YARA's own oss-fuzz seed corpus. Per the 2026-05-06 K7 dump, this is THE confirmed live trigger (`packer_dotfuscator:eod`, Karambiner). **Canonical fix LANDED** on branch `pawelwi/yara-strip-obfuscated` (commit `58e3ab7329`): a checked-in `base/comps/yara/modify_source.sh` deterministically strips `tests/oss-fuzz/dotnet_fuzzer_corpus/obfuscated` from Source0 and repacks with stable SHA512 (`57d3388dc9...`). The `base/comps/yara/yara.comp.toml` `source-files` block points at the modified tarball (placeholder URL until the modified tarball is uploaded to the AZL modified-sources blob). Tracked under ADO #19805. | [progress](investigation/yara/progress.md) |

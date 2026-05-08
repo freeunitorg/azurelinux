@@ -90,7 +90,6 @@ BuildRequires:	systemd-rpm-macros
 BuildRequires:	lz4-devel
 BuildRequires:	snappy-devel
 BuildRequires:	brotli-devel
-BuildRequires:	opus-devel
 BuildRequires:	sbc-devel
 %if 0%{?fedora}
 BuildRequires:	ilbc-devel

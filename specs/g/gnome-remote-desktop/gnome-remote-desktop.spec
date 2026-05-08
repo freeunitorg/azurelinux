@@ -18,7 +18,7 @@
 
 %global tarball_version %%(echo %{version} | tr '~' '.')
 
-%bcond rdp %[0%{?fedora} || 0%{?rhel} >= 10]
+%bcond rdp 0
 %bcond vnc %[0%{?fedora} || 0%{?rhel} < 10]
 
 %global libei_version 1.0.901
@@ -139,23 +139,29 @@ GNOME desktop environment.
 %doc README.md
 %{_bindir}/grdctl
 %{_libexecdir}/gnome-remote-desktop-daemon
+%if %{with rdp}
 %{_libexecdir}/gnome-remote-desktop-enable-service
 %{_libexecdir}/gnome-remote-desktop-configuration-daemon
+%endif
 %{_userunitdir}/%{systemd_unit_user}
 %{_userunitdir}/%{systemd_unit_headless}
+%if %{with rdp}
 %{_userunitdir}/%{systemd_unit_handover}
 %{_unitdir}/%{systemd_unit_system}
 %{_unitdir}/gnome-remote-desktop-configuration.service
 %{_datadir}/applications/org.gnome.RemoteDesktop.Handover.desktop
 %{_datadir}/dbus-1/system-services/org.gnome.RemoteDesktop.Configuration.service
 %{_datadir}/dbus-1/system.d/org.gnome.RemoteDesktop.conf
+%endif
 %{_datadir}/glib-2.0/schemas/org.gnome.desktop.remote-desktop.gschema.xml
 %{_datadir}/glib-2.0/schemas/org.gnome.desktop.remote-desktop.enums.xml
+%if %{with rdp}
 %{_datadir}/polkit-1/actions/org.gnome.remotedesktop.configure-system-daemon.policy
 %{_datadir}/polkit-1/actions/org.gnome.remotedesktop.enable-system-daemon.policy
 %{_datadir}/polkit-1/rules.d/20-gnome-remote-desktop.rules
 %{_sysusersdir}/gnome-remote-desktop-sysusers.conf
 %{_tmpfilesdir}/gnome-remote-desktop-tmpfiles.conf
+%endif
 
 %if %{with rdp}
 %{_datadir}/gnome-remote-desktop/

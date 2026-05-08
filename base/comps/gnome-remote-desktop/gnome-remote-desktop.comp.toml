@@ -1,0 +1,62 @@
+[components.gnome-remote-desktop]
+
+# AZL does not ship opus. Opus is a hard meson dependency when RDP is
+# enabled, so disable the RDP backend by forcing the bcond to off.
+# We also guard the RDP-only file entries so %files doesn't list missing files.
+
+[[components.gnome-remote-desktop.overlays]]
+description = "Force-disable RDP backend (opus is a hard RDP dep and is not available in AZL)"
+type = "spec-search-replace"
+regex = '%bcond rdp %\[0%\{\?fedora\} \|\| 0%\{\?rhel\} >= 10\]'
+replacement = '%bcond rdp 0'
+
+# Guard RDP-only libexec entries
+[[components.gnome-remote-desktop.overlays]]
+description = "Guard RDP-only libexec files in %files"
+type = "spec-search-replace"
+section = "%files"
+regex = '%\{_libexecdir\}/gnome-remote-desktop-enable-service'
+replacement = """%if %{with rdp}
+%{_libexecdir}/gnome-remote-desktop-enable-service"""
+
+[[components.gnome-remote-desktop.overlays]]
+description = "Close RDP guard after configuration-daemon, before user unit"
+type = "spec-search-replace"
+section = "%files"
+regex = '%\{_libexecdir\}/gnome-remote-desktop-configuration-daemon'
+replacement = """%{_libexecdir}/gnome-remote-desktop-configuration-daemon
+%endif"""
+
+# Guard RDP-only systemd and dbus entries
+[[components.gnome-remote-desktop.overlays]]
+description = "Guard RDP-only handover service in %files"
+type = "spec-search-replace"
+section = "%files"
+regex = '%\{_userunitdir\}/%\{systemd_unit_handover\}'
+replacement = """%if %{with rdp}
+%{_userunitdir}/%{systemd_unit_handover}"""
+
+[[components.gnome-remote-desktop.overlays]]
+description = "Close RDP guard after dbus system.d conf, before glib schemas"
+type = "spec-search-replace"
+section = "%files"
+regex = '%\{_datadir\}/dbus-1/system\.d/org\.gnome\.RemoteDesktop\.conf'
+replacement = """%{_datadir}/dbus-1/system.d/org.gnome.RemoteDesktop.conf
+%endif"""
+
+# Guard RDP-only polkit/sysusers/tmpfiles entries
+[[components.gnome-remote-desktop.overlays]]
+description = "Guard RDP-only polkit entries in %files"
+type = "spec-search-replace"
+section = "%files"
+regex = '%\{_datadir\}/polkit-1/actions/org\.gnome\.remotedesktop\.configure-system-daemon\.policy'
+replacement = """%if %{with rdp}
+%{_datadir}/polkit-1/actions/org.gnome.remotedesktop.configure-system-daemon.policy"""
+
+[[components.gnome-remote-desktop.overlays]]
+description = "Close RDP guard after tmpfiles.conf"
+type = "spec-search-replace"
+section = "%files"
+regex = '%\{_tmpfilesdir\}/gnome-remote-desktop-tmpfiles.conf'
+replacement = """%{_tmpfilesdir}/gnome-remote-desktop-tmpfiles.conf
+%endif"""

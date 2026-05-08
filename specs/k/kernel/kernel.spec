@@ -1232,10 +1232,12 @@ AutoProv: yes\
 
 
 
-# AZL: kmod subpackage declarations
+# AZL: kmod subpackage declarations (nvidia-open)
 %global _kmod_phase package
 %global _kmod_name nvidia-open
 %include %{_sourcedir}/kmod-nvidia-open.inc
+
+# AZL-KMOD-PACKAGE-ANCHOR — do not remove (kmod overlays chain here)
 %package doc
 Summary: Various documentation bits found in the kernel source
 Group: Documentation
@@ -2258,10 +2260,12 @@ RHJOBS=$RPM_BUILD_NCPUS SPECPACKAGE_NAME=%{name} ./process_configs.sh $OPTS %{sp
 cd ../..
 %endif
 
-# AZL: Prepare kmod subpackage sources
+# AZL: Prepare kmod subpackage sources (nvidia-open)
 %global _kmod_phase prep
 %global _kmod_name nvidia-open
 %include %{_sourcedir}/kmod-nvidia-open.inc
+
+# AZL-KMOD-PREP-ANCHOR — do not remove (kmod overlays chain here)
 %build
 %{log_msg "Start of build stage"}
 
@@ -3394,6 +3398,13 @@ find Documentation -type d | xargs chmod u+w
 %{log_msg "end install docs"}
 %endif
 
+# AZL: Build kmod subpackage modules (nvidia-open)
+%global _kmod_phase build
+%global _kmod_name nvidia-open
+%include %{_sourcedir}/kmod-nvidia-open.inc
+
+# AZL-KMOD-BUILD-ANCHOR — do not remove (kmod overlays chain here)
+
 # Module signing (modsign)
 #
 # This must be run _after_ find-debuginfo.sh runs, otherwise that will strip
@@ -3429,11 +3440,6 @@ find Documentation -type d | xargs chmod u+w
 
 %ifnarch noarch %{nobuildarches}
 %global __debug_package 1
-
-# AZL: Build kmod subpackage modules
-%global _kmod_phase build
-%global _kmod_name nvidia-open
-%include %{_sourcedir}/kmod-nvidia-open.inc
 %files -f debugfiles.list debuginfo-common-%{_target_cpu}
 %endif
 
@@ -3900,6 +3906,14 @@ popd
 %endif
 
 ###
+# AZL: Install kmod subpackage files (nvidia-open)
+%global _kmod_phase install
+%global _kmod_name nvidia-open
+%include %{_sourcedir}/kmod-nvidia-open.inc
+
+# AZL-KMOD-INSTALL-ANCHOR — do not remove (kmod overlays chain here)
+
+###
 ### clean
 ###
 
@@ -3908,11 +3922,6 @@ popd
 ###
 
 %if %{with_tools}
-
-# AZL: Install kmod subpackage files
-%global _kmod_phase install
-%global _kmod_name nvidia-open
-%include %{_sourcedir}/kmod-nvidia-open.inc
 %post -n %{package_name}-tools-libs
 /sbin/ldconfig
 
@@ -4566,10 +4575,12 @@ fi\
 #
 #
 
-# AZL: kmod subpackage file lists and scriptlets
+# AZL: kmod subpackage file lists and scriptlets (nvidia-open)
 %global _kmod_phase files
 %global _kmod_name nvidia-open
 %include %{_sourcedir}/kmod-nvidia-open.inc
+
+# AZL-KMOD-FILES-ANCHOR — do not remove (kmod overlays chain here)
 %changelog
 * Thu Feb 19 2026 Augusto Caringi <acaringi@redhat.com> [6.18.13-0]
 - Linux v6.18.13

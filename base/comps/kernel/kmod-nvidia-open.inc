@@ -13,6 +13,7 @@
 # =========================================================================
 %if "%{_kmod_phase}" == "package"
 
+%ifarch x86_64 aarch64
 %package -n kmod-%{_kmod_name}
 Summary:        NVIDIA open GPU kernel modules (driver %{nvidia_open_version})
 # NOTE: Version is inherited from kernel (%{version}), NOT nvidia_open_version.
@@ -25,7 +26,6 @@ Requires(post): kmod
 Requires(postun): kmod
 Conflicts:      nvidia-closed-kmod
 Conflicts:      nvidia-open
-ExclusiveArch:  x86_64 aarch64
 
 %description -n kmod-%{_kmod_name}
 Open-source NVIDIA GPU kernel modules (driver version %{nvidia_open_version})
@@ -39,6 +39,7 @@ nvidia-peermem.ko.
 NOTE: This subpackage has the kernel version (%{version}-%{release}), not the
 NVIDIA driver version. Use 'Requires: nvidia-open-kmod-version = %{nvidia_open_version}'
 to depend on a specific NVIDIA driver version.
+%endif
 
 %endif
 
@@ -47,7 +48,7 @@ to depend on a specific NVIDIA driver version.
 # =========================================================================
 %if "%{_kmod_phase}" == "prep"
 
-%ifnarch noarch %nobuildarches
+%ifarch x86_64 aarch64
 cd %{_builddir}
 tar -xf %{SOURCE6000}
 cd -
@@ -60,8 +61,7 @@ cd -
 # =========================================================================
 %if "%{_kmod_phase}" == "build"
 
-%if %{with_up_base}
-%ifnarch noarch %nobuildarches
+%ifarch x86_64 aarch64
 %{log_msg "Building NVIDIA open GPU kernel modules %{nvidia_open_version} for %{KVERREL}"}
 pushd %{_builddir}/open-gpu-kernel-modules-%{nvidia_open_version}
 # Unset LDFLAGS — NVIDIA kbuild invokes ld directly, not via gcc
@@ -76,7 +76,6 @@ make %{?_smp_mflags} modules \
     NV_EXCLUDE_BUILD_MODULES=""
 popd
 %endif
-%endif
 
 %endif
 
@@ -85,15 +84,12 @@ popd
 # =========================================================================
 %if "%{_kmod_phase}" == "install"
 
-%if %{with_up_base}
-%ifnarch noarch %nobuildarches
+%ifarch x86_64 aarch64
 %{log_msg "Installing NVIDIA open GPU kernel modules for %{KVERREL}"}
 install -d %{buildroot}/lib/modules/%{KVERREL}/extra/nvidia
 for mod in nvidia nvidia-modeset nvidia-drm nvidia-uvm nvidia-peermem; do
     ko="%{_builddir}/open-gpu-kernel-modules-%{nvidia_open_version}/kernel-open/${mod}.ko"
-    if [ -f "${ko}" ]; then
-        install -m 0644 "${ko}" %{buildroot}/lib/modules/%{KVERREL}/extra/nvidia/
-    fi
+    install -m 0644 "${ko}" %{buildroot}/lib/modules/%{KVERREL}/extra/nvidia/
 done
 # Install modprobe config to blacklist conflicting modules
 install -D -m 0644 %{SOURCE6001} %{buildroot}%{_sysconfdir}/modprobe.d/kmod-%{_kmod_name}.conf
@@ -110,7 +106,6 @@ DEPMOD_EOF
 install -D -m 0644 %{_builddir}/open-gpu-kernel-modules-%{nvidia_open_version}/COPYING \
     %{buildroot}%{_datadir}/licenses/kmod-%{_kmod_name}/COPYING
 %endif
-%endif
 
 %endif
 
@@ -119,6 +114,7 @@ install -D -m 0644 %{_builddir}/open-gpu-kernel-modules-%{nvidia_open_version}/C
 # =========================================================================
 %if "%{_kmod_phase}" == "files"
 
+%ifarch x86_64 aarch64
 %post -n kmod-%{_kmod_name}
 %{_sbindir}/depmod -a %{KVERREL} || :
 
@@ -134,5 +130,6 @@ install -D -m 0644 %{_builddir}/open-gpu-kernel-modules-%{nvidia_open_version}/C
 /lib/modules/%{KVERREL}/extra/nvidia/nvidia-peermem.ko.xz
 %config(noreplace) %{_sysconfdir}/modprobe.d/kmod-%{_kmod_name}.conf
 %{_sysconfdir}/depmod.d/kmod-%{_kmod_name}.conf
+%endif
 
 %endif

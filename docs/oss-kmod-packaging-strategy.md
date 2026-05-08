@@ -192,4 +192,4 @@ The kmod RPM contains:
 
 4. **Module compression** — the kernel spec's `%post` processing compresses `.ko` files to `.ko.xz`. The `%files` section must reference the compressed names.
 
-5. **Architecture restrictions** — use `%ifnarch noarch %nobuildarches` guards in prep/build/install phases to skip kmod work on doc-only or excluded architecture builds.
+5. **Architecture restrictions** — use `%ifarch x86_64 aarch64` guards in prep/build/install phases to skip kmod work on architectures where the module is not supported.

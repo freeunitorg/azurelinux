@@ -22,7 +22,6 @@ BuildRequires:  gcc gcc-c++
 BuildRequires:  pkgconfig
 BuildRequires:  glib2-devel >= 2.22
 BuildRequires:  spice-protocol >= 0.14.5
-BuildRequires:  opus-devel
 BuildRequires:  pixman-devel openssl-devel libjpeg-devel
 BuildRequires:  libcacard-devel cyrus-sasl-devel
 BuildRequires:  lz4-devel
@@ -71,7 +70,7 @@ using spice-server, you will need to install spice-server-devel.
 
 %build
 %meson \
-	-Dopus=enabled \
+	-Dopus=disabled \
 	-Dsmartcard=enabled \
 	-Dlz4=true \
 	-Dgstreamer=1.0

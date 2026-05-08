@@ -30,7 +30,6 @@ BuildRequires: meson
 BuildRequires: usbredir-devel >= 0.7.1
 BuildRequires: libusb1-devel >= 1.0.21
 BuildRequires: pixman-devel libjpeg-turbo-devel
-BuildRequires: opus-devel
 BuildRequires: zlib-devel
 BuildRequires: cyrus-sasl-devel
 BuildRequires: libcacard-devel
@@ -128,6 +127,7 @@ spicy-screenshot is a tool to capture screen-shots of a SPICE desktop.
 # meson macro has --auto-features=enabled
 
 %meson \
+  -Dopus=disabled \
   -Dbuiltin-mjpeg=false \
 %ifarch s390x # https://gitlab.freedesktop.org/spice/spice-gtk/issues/120
   -Dusbredir=disabled \

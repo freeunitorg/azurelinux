@@ -30,7 +30,6 @@ BuildRequires:	gsm-devel
 BuildRequires:	libtool
 BuildRequires:	make
 BuildRequires:	python3
-BuildRequires:  opus-devel
 BuildRequires:  lame-devel
 BuildRequires:  mpg123-devel
 

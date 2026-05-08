@@ -1,0 +1,11 @@
+[components.libsndfile]
+
+# AZL does not ship opus — remove the BR so libsndfile builds without opus.
+# libsndfile autodetects opus via pkg-config; without opus-devel it simply
+# disables opus support at configure time.
+
+[[components.libsndfile.overlays]]
+description = "Remove opus-devel BuildRequires (opus not available in AZL)"
+type = "spec-remove-tag"
+tag = "BuildRequires"
+value = "opus-devel"

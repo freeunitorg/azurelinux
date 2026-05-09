@@ -206,6 +206,7 @@ separate pass that hashes the staged lookaside files.
 | `encrypted.7z` | `e08da1630dadceed970afb3e4dc3ecc098de05e858e4b11af852b863a2f85178` | `File is encrypted!` | K7 | `qt6-qtwebengine` | `.../src/3rdparty/chromium/third_party/lzma_sdk/google/test_data/encrypted.7z` | [qt6-qtwebengine/package_files.md](investigation/qt6-qtwebengine/package_files.md) line 733432 |
 | `encrypted_header.7z` | `fffad602471fa9cede8c5f084c38c47dab92247caea300c15ae19d9e95212b98` | `File is encrypted!` | K7 | `qt6-qtwebengine` | `.../src/3rdparty/chromium/third_party/lzma_sdk/google/test_data/encrypted_header.7z` | [qt6-qtwebengine/package_files.md](investigation/qt6-qtwebengine/package_files.md) line 733433 |
 | `aes_archive.zip` | `4abb3f304d1ab669453b7c4eae80db6ce8aff4ab91c8ab9a6edf90bbfede12f4` | `File is encrypted!` | K7 | `mozjs128` | inside `mozjs128-128.11.0-1.azl4~20260420.src.rpm` (path not enumerated — [mozjs128/package_files.md](investigation/mozjs128/package_files.md) listing is incomplete) | per user direction 2026-05-06; needs path confirmation during the `mozjs128` Wave-C investigation |
+| `ff-inst.exe` | TBD | Obfuscated Content Policy | ESRP Sign | `firefox` | inside `firefox-148.0-1.azl4~20260420.src.rpm` (path not enumerated yet) | per ESRP e-mail 2026-05-08 ("ESRP Sign Announcement – Obfuscated Content Policy"); plan is to patch the source to strip `ff-inst.exe` and re-send for signing |
 
 ### Failing RPM → detected file → component
 
@@ -220,7 +221,7 @@ Total: 41 unique failing RPMs → 21 detection rows + 34 no-detection rows = 55 
 | `chromium-145.0.7632.109-1.azl4~20260420.src.rpm` | — | (none — not in this repo) |
 | `espeak-ng-1.51.1-12.azl4~20260420.src.rpm` | — | [`espeak-ng`](investigation/espeak-ng/progress.md) |
 | `exfatprogs-1.3.1-1.azl4~20260420.src.rpm` | — | [`exfatprogs`](investigation/exfatprogs/progress.md) |
-| `firefox-148.0-1.azl4~20260420.src.rpm` | — | [`firefox`](investigation/firefox/progress.md) |
+| `firefox-148.0-1.azl4~20260420.src.rpm` | `ff-inst.exe` | [`firefox`](investigation/firefox/progress.md) |
 | `gdal-3.11.5-1.azl4~20260420.src.rpm` | — | [`gdal`](investigation/gdal/progress.md) |
 | `ghc-ghc-devel-9.8.4-149.azl4~20260420.aarch64.rpm` | — | [`ghc`](investigation/ghc/progress.md) |
 | `ghc-ghc-prof-9.8.4-149.azl4~20260420.aarch64.rpm` | — | [`ghc`](investigation/ghc/progress.md) |

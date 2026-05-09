@@ -6,6 +6,9 @@
 # This spec file has been modified by azldev to include build configuration overlays.
 # Do not edit manually; changes may be overwritten.
 
+# All Azure Linux specs with overlays include this macro file, irrespective of whether new macros have been added.
+%{load:%{_sourcedir}/java-25-openjdk-portable.azl.macros}
+
 %if (0%{?rhel} > 0 && 0%{?rhel} < 8)
 # portable jdk 17 specific bug, _jvmdir being missing
 %define _jvmdir /usr/lib/jvm
@@ -644,6 +647,7 @@ Source16: CheckVendor.java
 
 # Ensure translations are available for new timezones
 Source18: TestTranslations.java
+Source9999: java-25-openjdk-portable.azl.macros
 
 ############################################
 #

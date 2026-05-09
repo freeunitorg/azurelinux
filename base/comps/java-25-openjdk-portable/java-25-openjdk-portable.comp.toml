@@ -12,6 +12,21 @@
 release = { calculation = "manual" }
 spec = { type = "upstream", upstream-distro = { name = "fedora", version = "43" }, upstream-commit = "cad9d5a1ed48cf7e9e12cfadfdacc11f523d46cb" }
 
+# Drop the slowdebug build variant. See the matching
+# `build.without = ["slowdebug"]` in
+# `base/comps/java-25-openjdk/java-25-openjdk.comp.toml` in this same
+# commit. The two components must drop slowdebug together because
+# `java-25-openjdk` `BuildRequires:` the `*-{devel,static-libs}-slowdebug`
+# sub-packages this `*-portable` package would otherwise produce.
+#
+# The upstream spec gates the slowdebug build path behind
+# `%bcond_without slowdebug`. Passing `--without slowdebug` zeroes out
+# `include_debug_build`, which drops the slowdebug `%package`/`%files`
+# blocks (`headless-slowdebug`, `devel-slowdebug`, `static-libs-slowdebug`,
+# etc.) and skips the slowdebug build loop. No spec mutation needed.
+[components.java-25-openjdk-portable.build]
+without = ["slowdebug"]
+
 [[components.java-25-openjdk-portable.overlays]]
 description = "Override buildjdkver to use Java 25 instead of 24 for bootstrap"
 type = "spec-search-replace"

@@ -5,3 +5,28 @@ release = { calculation = "manual" }
 # Fed43 portable rpm delivers 25.0.0.0.32. Fedora43 builds work with Fed42 rpm. To
 # unblock our build, we pin to the last Fedora 43 commit when version was 25.0.0.0.32.
 spec = { type = "upstream", upstream-distro = { name = "fedora", version = "43" }, upstream-commit = "6011214a0e0e5c6302d0d59b6e8805d049749420" }
+
+# Drop the slowdebug build variant.
+#
+# Several `*-static-libs-slowdebug` (and other slowdebug) sub-packages
+# are exceptionally large -- the per-arch static-libs-slowdebug RPMs in
+# particular regularly time out the automated package-signing
+# pipeline's decompression stage at 2100s+, blocking publish.
+#
+# Mechanism: the upstream spec already gates the slowdebug build path
+# behind `%bcond_without slowdebug`. Adding `build.without = ["slowdebug"]`
+# below causes `azldev` to pass `--without slowdebug` to rpmbuild, which
+# zeroes out `include_debug_build`, which in turn (a) skips the entire
+# slowdebug build loop in `%build`, (b) drops the slowdebug `BuildRequires:
+# %{portable_name}-{devel,static-libs}-slowdebug` lines from this spec
+# (they are gated by `%if %{include_debug_build}`), and (c) drops every
+# `%package <name>-slowdebug` and matching `%files` block. No spec
+# mutation needed.
+#
+# See the matching `build.without = ["slowdebug"]` in
+# `base/comps/java-25-openjdk-portable/java-25-openjdk-portable.comp.toml`
+# in this same commit -- both components must drop slowdebug together so
+# the consumer's slowdebug `BuildRequires:` lines line up with what the
+# producer ships.
+[components.java-25-openjdk.build]
+without = ["slowdebug"]

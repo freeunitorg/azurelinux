@@ -6,6 +6,9 @@
 # This spec file has been modified by azldev to include build configuration overlays.
 # Do not edit manually; changes may be overwritten.
 
+# All Azure Linux specs with overlays include this macro file, irrespective of whether new macros have been added.
+%{load:%{_sourcedir}/java-25-openjdk.azl.macros}
+
 # RPM conditionals so as to be able to dynamically produce
 # slowdebug/release builds. See:
 # http://rpm.org/user_doc/conditional_builds.html
@@ -1235,6 +1238,7 @@ Source16: CheckVendor.java
 
 # Ensure translations are available for new timezones
 Source18: TestTranslations.java
+Source9999: java-25-openjdk.azl.macros
 
 BuildRequires: %{portable_name}-sources >= %{portable_version}
 BuildRequires: %{portable_name}-misc >= %{portable_version}

@@ -1,0 +1,5 @@
+[components.gcab]
+
+# Azure Linux does not ship mingw cross-compilation toolchains.
+[components.gcab.build]
+without = ["mingw"]

@@ -1,0 +1,5 @@
+[components.freexl]
+
+# Azure Linux does not ship mingw cross-compilation toolchains.
+[components.freexl.build]
+without = ["mingw"]

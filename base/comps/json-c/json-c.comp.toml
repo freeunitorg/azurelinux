@@ -1,0 +1,5 @@
+[components.json-c]
+
+# Azure Linux does not ship mingw cross-compilation toolchains.
+[components.json-c.build]
+without = ["mingw"]

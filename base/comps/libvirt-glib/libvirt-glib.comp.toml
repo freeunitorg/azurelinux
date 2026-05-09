@@ -1,0 +1,5 @@
+[components.libvirt-glib]
+
+# Azure Linux does not ship mingw cross-compilation toolchains.
+[components.libvirt-glib.build]
+without = ["mingw"]

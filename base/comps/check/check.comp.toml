@@ -1,0 +1,5 @@
+[components.check]
+
+# Azure Linux does not ship mingw cross-compilation toolchains.
+[components.check.build]
+without = ["mingw"]

@@ -1,0 +1,5 @@
+[components.cereal]
+
+# Azure Linux does not ship mingw cross-compilation toolchains.
+[components.cereal.build]
+without = ["mingw"]

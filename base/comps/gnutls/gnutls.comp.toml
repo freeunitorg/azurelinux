@@ -3,4 +3,4 @@
 # Re-enable once the underlying fips dependency chain is resolved.
 [components.gnutls]
 [components.gnutls.build]
-without = ["fips"]
+without = ["fips", "mingw"]

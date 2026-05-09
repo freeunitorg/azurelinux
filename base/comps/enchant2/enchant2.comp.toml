@@ -1,0 +1,5 @@
+[components.enchant2]
+
+# Azure Linux does not ship mingw cross-compilation toolchains.
+[components.enchant2.build]
+without = ["mingw"]

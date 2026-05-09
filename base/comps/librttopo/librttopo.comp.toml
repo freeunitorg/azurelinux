@@ -1,0 +1,5 @@
+[components.librttopo]
+
+# Azure Linux does not ship mingw cross-compilation toolchains.
+[components.librttopo.build]
+without = ["mingw"]

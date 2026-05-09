@@ -1,0 +1,5 @@
+[components.tesseract]
+
+# Azure Linux does not ship mingw cross-compilation toolchains.
+[components.tesseract.build]
+without = ["mingw"]

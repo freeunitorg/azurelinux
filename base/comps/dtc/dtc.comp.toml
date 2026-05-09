@@ -1,0 +1,5 @@
+[components.dtc]
+
+# Azure Linux does not ship mingw cross-compilation toolchains.
+[components.dtc.build]
+without = ["mingw"]

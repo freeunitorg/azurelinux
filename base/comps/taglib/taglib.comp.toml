@@ -1,0 +1,5 @@
+[components.taglib]
+
+# Azure Linux does not ship mingw cross-compilation toolchains.
+[components.taglib.build]
+without = ["mingw"]

@@ -1,0 +1,5 @@
+[components.shapelib]
+
+# Azure Linux does not ship mingw cross-compilation toolchains.
+[components.shapelib.build]
+without = ["mingw"]

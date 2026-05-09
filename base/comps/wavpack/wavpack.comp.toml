@@ -1,0 +1,5 @@
+[components.wavpack]
+
+# Azure Linux does not ship mingw cross-compilation toolchains.
+[components.wavpack.build]
+without = ["mingw"]

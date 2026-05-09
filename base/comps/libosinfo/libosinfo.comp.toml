@@ -1,0 +1,5 @@
+[components.libosinfo]
+
+# Azure Linux does not ship mingw cross-compilation toolchains.
+[components.libosinfo.build]
+without = ["mingw"]

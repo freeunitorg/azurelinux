@@ -1,0 +1,5 @@
+[components.eigen3]
+
+# Azure Linux does not ship mingw cross-compilation toolchains.
+[components.eigen3.build]
+without = ["mingw"]

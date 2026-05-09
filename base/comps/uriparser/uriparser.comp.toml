@@ -1,0 +1,5 @@
+[components.uriparser]
+
+# Azure Linux does not ship mingw cross-compilation toolchains.
+[components.uriparser.build]
+without = ["mingw"]

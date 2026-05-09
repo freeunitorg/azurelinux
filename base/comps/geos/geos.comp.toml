@@ -1,0 +1,5 @@
+[components.geos]
+
+# Azure Linux does not ship mingw cross-compilation toolchains.
+[components.geos.build]
+without = ["mingw"]

@@ -1,0 +1,5 @@
+[components.osinfo-db-tools]
+
+# Azure Linux does not ship mingw cross-compilation toolchains.
+[components.osinfo-db-tools.build]
+without = ["mingw"]

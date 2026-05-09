@@ -1,0 +1,5 @@
+[components.libgeotiff]
+
+# Azure Linux does not ship mingw cross-compilation toolchains.
+[components.libgeotiff.build]
+without = ["mingw"]

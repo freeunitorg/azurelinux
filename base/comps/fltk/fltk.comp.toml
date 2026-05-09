@@ -1,0 +1,5 @@
+[components.fltk]
+
+# Azure Linux does not ship mingw cross-compilation toolchains.
+[components.fltk.build]
+without = ["mingw"]

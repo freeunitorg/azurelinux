@@ -3,6 +3,8 @@
 # nghttp2's mingw support is enabled in Fedora-derived builds of the upstream spec.
 # mingw support is out of scope for Azure Linux, and enabling it presently brings in
 # dependencies on Python 3.11, which we do not support.
+[components.nghttp2.build]
+without = ["mingw"]
 [[components.nghttp2.overlays]]
 description = "Disable mingw support"
 type = "spec-search-replace"

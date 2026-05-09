@@ -5,3 +5,16 @@ release = { calculation = "manual" }
 # Fed43 portable rpm delivers 25.0.0.0.32. Fedora43 builds work with Fed42 rpm. To
 # unblock our build, we pin to the last Fedora 43 commit when version was 25.0.0.0.32.
 spec = { type = "upstream", upstream-distro = { name = "fedora", version = "43" }, upstream-commit = "6011214a0e0e5c6302d0d59b6e8805d049749420" }
+# Disable slowdebug variant builds; we don't ship -slowdebug subpackages.
+build.without = ["slowdebug"]
+
+[components.java-25-openjdk.build.defines]
+# AZL-controlled rpmrelease number. Bump when shipping new AZL-only changes
+# on top of the pinned upstream commit.
+azl_rpmrelease = "6"
+
+[[components.java-25-openjdk.overlays]]
+description = "Drive %{rpmrelease} from azl_rpmrelease define so we can bump release independently of upstream"
+type = "spec-search-replace"
+regex = '^%global rpmrelease\s+\S+'
+replacement = '%global rpmrelease %{azl_rpmrelease}'

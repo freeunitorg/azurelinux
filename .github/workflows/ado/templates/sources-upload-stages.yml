@@ -207,6 +207,7 @@ stages:
                   --api-base-url "$API_BASE_URL" \
                   --changed-components-file "$CHANGED_COMPONENTS_FILE" \
                   --package-target azl4 \
+                  --scratch-build \
                   --commit-sha "$SOURCE_COMMIT" \
                   --repo-uri "$UPSTREAM_REPO_URL"
             env:

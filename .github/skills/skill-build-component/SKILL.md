@@ -52,6 +52,8 @@ The standard cycle for investigating, modifying, and verifying components:
 investigate → modify → render → build → test → inspect
 ```
 
+> **Finalize with `azldev comp update -p <name>` before opening a PR** — lock fingerprints are computed from the full component config, so any TOML change can invalidate them. The `Update Locks` CI check enforces this. After committing your change, **re-render and amend** so `%changelog` / `Release:` track the new commit (rpmautospec walks `git log` every render). See [`skill-update-component`](../skill-update-component/SKILL.md) for the full finalize-and-amend pattern, plus the pin-bump variant.
+
 | Step | Command | What to check |
 |------|---------|---------------|
 | **Investigate** | Read `specs/<first-char>/<name>/<name>.spec` or `prep-sources --skip-overlays --force -o base/build/work/scratch/<name>-pre` | Upstream spec/sources as-is |
@@ -72,7 +74,7 @@ investigate → modify → render → build → test → inspect
 
 ### 0. Release calculation errors
 
-If `render` fails with `non-standard Release tag value ... does not start with an integer`, see [Release Configuration](../../instructions/comp-toml.instructions.md#release-configuration).
+If `render` fails with `non-standard Release tag value ... does not start with an integer`, or if `%autorelease` is incorrectly expanded to a hardcoded integer (common with conditional `%autorelease` specs), see [Release Configuration](../../instructions/comp-toml.instructions.md#release-configuration).
 
 ### 1. Render and inspect the spec
 

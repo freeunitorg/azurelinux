@@ -25,7 +25,7 @@
 
 # gdm-hooks moved to gdm packaging f28+
 %if 0%{?fedora} < 28 && 0%{?rhel} < 8
-%global gdm_hooks 1
+%global gdm_hooks 0
 %endif
 
 ## comment to disable tests
@@ -37,7 +37,7 @@
 Name:           pulseaudio
 Summary:        Improved Linux Sound Server
 Version:        %{pa_major}%{?pa_minor:.%{pa_minor}}
-Release: 10%{?snap:.%{snap}git%{shortcommit}}%{?dist}
+Release:        9%{?snap:.%{snap}git%{shortcommit}}%{?dist}
 License:        LGPL-2.1-or-later
 URL:            http://www.freedesktop.org/wiki/Software/PulseAudio
 %if 0%{?gitrel}

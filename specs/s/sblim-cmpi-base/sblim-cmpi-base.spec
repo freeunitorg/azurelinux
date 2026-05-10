@@ -1,11 +1,11 @@
 # This spec file has been modified by azldev to include build configuration overlays.
 # Do not edit manually; changes may be overwritten.
 
-%global with_test_subpackage 1
+%global with_test_subpackage 0
 
 Name:           sblim-cmpi-base
 Version:        1.6.4
-Release: 31%{?dist}
+Release: 32%{?dist}
 Summary:        SBLIM CMPI Base Providers
 
 License:        EPL-1.0

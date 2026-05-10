@@ -13,7 +13,7 @@ Usage:
     python3 check_rendered_specs.py --specs-dir specs --report report.json --patch fix.patch
 
 Exit codes:
-    0 — specs are up to date (timestamp-only noise filtered)
+    0 — specs are up to date
     1 — real diffs, extra files, or missing files detected
 """
 
@@ -22,7 +22,7 @@ from __future__ import annotations
 import argparse
 import difflib
 import json
-import re
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -30,16 +30,6 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
-
-# Matches the azldev-generated changelog line.
-# Tightly coupled to the format emitted by azldev's render pipeline; if azldev
-# ever changes the emitted form (email suffix, version tag, different
-# whitespace) this regex must be updated or every spec will look like drift.
-# Owner: azure-linux-dev-tools (cmd that emits "* <date> azldev <user@example.com>" lines).
-# e.g. "* Wed Apr 08 2026 azldev <azurelinux@microsoft.com> - 1.0-1"
-_CHANGELOG_DATE_RE = re.compile(
-    r"^\* [A-Z][a-z]{2} [A-Z][a-z]{2} [0-9]{2} [0-9]{4} azldev\b"
-)
 
 # ---------------------------------------------------------------------------
 # Git helpers
@@ -87,33 +77,35 @@ def _resolve_head_blobs(paths: list[str]) -> dict[str, str]:
 
 
 # ---------------------------------------------------------------------------
-# Normalisation
-# ---------------------------------------------------------------------------
-
-
-def normalize_changelog_date(text: str) -> str:
-    """Replace the date on azldev changelog entries with a placeholder."""
-    out: list[str] = []
-    for line in text.splitlines(keepends=True):
-        if _CHANGELOG_DATE_RE.match(line):
-            line = _CHANGELOG_DATE_RE.sub("* DATEPLACEHOLDER azldev", line)
-        out.append(line)
-    return "".join(out)
-
-
-# ---------------------------------------------------------------------------
 # Diff / classification
 # ---------------------------------------------------------------------------
 
 
-def component_from_path(file_path: str) -> str:
+def component_from_path(file_path: str, specs_dir: Path) -> str:
     """Extract the component name from a specs path.
 
-    The component is always the direct parent directory:
-    specs/a/acl/acl.spec → acl
-    /abs/path/specs/n/nano/nano.spec → nano
+    Layout under specs_dir is `<letter>/<component>/...`, so the component
+    is the second path segment relative to specs_dir. Handles nested files
+    (e.g. `specs/d/dejavu-fonts/plans/foo.fmf` → `dejavu-fonts`) correctly,
+    where the old `Path.parent.name` shortcut would have returned `plans`.
+
+    Coordinate normalization: the CI workflow passes `specs_dir` as an
+    absolute path (azldev's `WithAbsolutePaths` resolves it during config
+    dump) while `git diff --name-only` emits repo-relative paths. We use
+    `.resolve()` on `specs_dir` to canonicalize that absolute path, and
+    `os.path.abspath` (lexical, does NOT follow symlinks) on `file_path`
+    so attacker-controlled symlinks under specs_dir can't escape the
+    component-attribution check by resolving outside the tree or to a
+    sibling component. The `is_symlink()` branch in `build_content_diffs`
+    is the layer that actually refuses to read symlinks; this function
+    just needs to label them correctly without crashing.
     """
-    return Path(file_path).parent.name
+    file_abs = os.path.abspath(file_path)
+    specs_abs = str(specs_dir.resolve())
+    rel = Path(file_abs).relative_to(specs_abs)
+    if len(rel.parts) >= 2:
+        return rel.parts[1]
+    return rel.parts[0] if rel.parts else ""
 
 
 def classify_changes(specs_dir: Path) -> tuple[list[str], list[str], list[str]]:
@@ -142,11 +134,11 @@ def classify_changes(specs_dir: Path) -> tuple[list[str], list[str], list[str]]:
     return changed, extra, missing
 
 
-def filter_timestamp_noise(changed_files: list[str], specs_dir: Path) -> list[dict]:
-    """Filter changed files to only those with real (non-timestamp) diffs.
+def build_content_diffs(changed_files: list[str], specs_dir: Path) -> list[dict]:
+    """Build diff entries for changed files.
 
-    Only .spec files are checked for timestamp noise — other file types
-    (patches, GPG keys, etc.) are always treated as real changes.
+    Reads committed and working-tree versions, compares them, and returns
+    a list of diff entries for files that actually differ.
     """
     real_diffs: list[dict] = []
     # Resolve all HEAD blob hashes up front so we can fetch each file's
@@ -156,7 +148,6 @@ def filter_timestamp_noise(changed_files: list[str], specs_dir: Path) -> list[di
     head_blobs = _resolve_head_blobs(changed_files)
     for path_str in changed_files:
         file_path = Path(path_str)
-        is_spec = file_path.suffix == ".spec"
 
         # Symlinks in a rendered-output tree are suspicious (could point
         # anywhere on the runner's filesystem). Flag and skip content reads.
@@ -168,7 +159,7 @@ def filter_timestamp_noise(changed_files: list[str], specs_dir: Path) -> list[di
             real_diffs.append(
                 {
                     "path": path_str,
-                    "component": component_from_path(path_str),
+                    "component": component_from_path(path_str, specs_dir),
                     "diff": f"Symlink {path_str} — refusing to follow",
                 }
             )
@@ -188,7 +179,7 @@ def filter_timestamp_noise(changed_files: list[str], specs_dir: Path) -> list[di
             real_diffs.append(
                 {
                     "path": path_str,
-                    "component": component_from_path(path_str),
+                    "component": component_from_path(path_str, specs_dir),
                     "diff": f"{path_str} changed but HEAD blob unresolved",
                 }
             )
@@ -204,7 +195,7 @@ def filter_timestamp_noise(changed_files: list[str], specs_dir: Path) -> list[di
             real_diffs.append(
                 {
                     "path": path_str,
-                    "component": component_from_path(path_str),
+                    "component": component_from_path(path_str, specs_dir),
                     "diff": f"{path_str} changed but HEAD content unreadable",
                 }
             )
@@ -217,7 +208,7 @@ def filter_timestamp_noise(changed_files: list[str], specs_dir: Path) -> list[di
             real_diffs.append(
                 {
                     "path": path_str,
-                    "component": component_from_path(path_str),
+                    "component": component_from_path(path_str, specs_dir),
                     "diff": f"Binary file {path_str} differs",
                 }
             )
@@ -239,26 +230,15 @@ def filter_timestamp_noise(changed_files: list[str], specs_dir: Path) -> list[di
             real_diffs.append(
                 {
                     "path": path_str,
-                    "component": component_from_path(path_str),
+                    "component": component_from_path(path_str, specs_dir),
                     "diff": f"Binary file {path_str} differs",
                 }
             )
             continue
 
-        if is_spec:
-            norm_committed = normalize_changelog_date(committed)
-            norm_working = normalize_changelog_date(working)
-        else:
-            norm_committed = committed
-            norm_working = working
-
-        # Equality check on the *normalised* text filters out timestamp-only
-        # drift (the whole point of this function). If the normalised
-        # versions match, skip.
-        if norm_committed == norm_working:
+        if committed == working:
             continue
 
-        # Use the original diff for display purposes.
         udiff = "".join(
             difflib.unified_diff(
                 committed.splitlines(keepends=True),
@@ -271,7 +251,7 @@ def filter_timestamp_noise(changed_files: list[str], specs_dir: Path) -> list[di
         real_diffs.append(
             {
                 "path": path_str,
-                "component": component_from_path(path_str),
+                "component": component_from_path(path_str, specs_dir),
                 "diff": udiff,
             }
         )
@@ -288,15 +268,18 @@ def build_report(
     content_diffs: list[dict],
     extra_files: list[str],
     missing_files: list[str],
+    specs_dir: Path,
 ) -> dict:
     """Build the JSON-serialisable report."""
     return {
         "content_diffs": content_diffs,
         "extra_files": [
-            {"path": p, "component": component_from_path(p)} for p in extra_files
+            {"path": p, "component": component_from_path(p, specs_dir)}
+            for p in extra_files
         ],
         "missing_files": [
-            {"path": p, "component": component_from_path(p)} for p in missing_files
+            {"path": p, "component": component_from_path(p, specs_dir)}
+            for p in missing_files
         ],
     }
 
@@ -465,12 +448,12 @@ def main() -> int:
         f"Raw counts: changed={len(changed)} extra={len(extra)} missing={len(missing)}"
     )
 
-    # 2. Filter timestamp noise from content diffs
-    content_diffs = filter_timestamp_noise(changed, specs_dir)
-    print(f"After timestamp filtering: {len(content_diffs)} real content diff(s)")
+    # 2. Build content diffs
+    content_diffs = build_content_diffs(changed, specs_dir)
+    print(f"{len(content_diffs)} content diff(s)")
 
     # 3. Build report
-    report = build_report(content_diffs, extra, missing)
+    report = build_report(content_diffs, extra, missing, specs_dir)
 
     if args.report:
         args.report.parent.mkdir(parents=True, exist_ok=True)
@@ -490,7 +473,7 @@ def main() -> int:
 
     # 5. Print summary and exit
     if total == 0:
-        print("All rendered specs are up to date (timestamp-only noise filtered).")
+        print("All rendered specs are up to date.")
         return 0
 
     print(
@@ -500,10 +483,10 @@ def main() -> int:
     all_comps = sorted(
         set(
             _unique_components(content_diffs)
-            + _unique_components(report.get("missing_files", []))
+            + _unique_components(report.get("extra_files", []))
         )
     )
-    if extra or missing:
+    if missing:
         print(f"Remediation: {_render_command([], use_all=True)}")
     elif all_comps:
         print(f"Remediation: {_render_command(all_comps)}")

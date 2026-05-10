@@ -3,7 +3,7 @@
 
 Name: po4a
 Version: 0.74
-Release: 4%{?dist}
+Release: 5%{?dist}
 Summary: A tool maintaining translations anywhere
 
 # Note: source is imprecise about 2.0-only vs 2.0-or-later
@@ -82,8 +82,6 @@ Requires: gettext
 Requires: opensp
 # hope texlive-kpseas-bin missing deps was fixed
 # epel7 doesn't have /usr/share/texlive/texmf-dist/web2c/texmf.cnf
-Requires: texlive-kpathsea
-Requires: texlive-kpathsea-bin
 
 # Optional, but package is quite useless without
 Requires: perl(Locale::gettext) >= 1.01

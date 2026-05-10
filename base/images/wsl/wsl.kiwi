@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-model href="https://raw.githubusercontent.com/OSInside/kiwi/refs/tags/v10.2.33/kiwi/schema/kiwi.rng" type="application/xml"?>
+<image schemaversion="8.3" name="azl4-wsl">
+    <description type="system">
+        <author>Azure Linux</author>
+        <contact>azurelinux@microsoft.com</contact>
+        <specification>Azure Linux WSL Image</specification>
+    </description>
+    <!-- See vm-base.kiwi for an explanation of the canonical / -dev profiles. -->
+    <profiles>
+        <profile name="wsl"     description="Ships azurelinux-repos (runtime → PMC beta)" import="false" />
+        <profile name="wsl-dev" description="Ships azurelinux-repos-dev (runtime → azl4-dev)" import="false" />
+    </profiles>
+    <preferences>
+        <version>0.1</version>
+        <packagemanager>dnf5</packagemanager>
+        <locale>en_US</locale>
+        <timezone>UTC</timezone>
+        <release-version>4.0</release-version>
+        <type image="wsl"/>
+        <rpm-locale-filtering>false</rpm-locale-filtering>
+        <rpm-excludedocs>false</rpm-excludedocs>
+    </preferences>
+
+    <!-- Single build-time repository (see vm-base.kiwi). -->
+    <repository type="rpm-md" alias="azurelinux-base">
+        <source
+            path="https://stcontroltowerdevjwisitg.blob.core.windows.net/azl4-dev/base/$basearch" />
+    </repository>
+
+    <!-- Package list derived from Fedora 43's WSL image composition. -->
+    <packages type="image" patternType="plusRecommended">
+        <package name="attr"/>
+        <package name="acl"/>
+        <package name="bash-color-prompt"/>
+        <package name="bash-completion"/>
+        <package name="bind-utils"/>
+        <package name="bzip2"/>
+        <package name="curl"/>
+        <package name="dbus"/>
+        <package name="default-editor"/>
+        <package name="file"/>
+        <package name="glibc-langpack-en"/>
+        <package name="gnupg2"/>
+        <package name="iproute"/>
+        <package name="iputils"/>
+        <package name="less"/>
+        <package name="lsof"/>
+        <package name="man-db"/>
+        <package name="man-pages"/>
+        <package name="nmap-ncat"/>
+        <package name="openssh-clients"/>
+        <package name="passwd"/>
+        <package name="pciutils"/>
+        <package name="procps-ng"/>
+        <package name="rsync"/>
+        <package name="shadow-utils"/>
+        <package name="sudo"/>
+        <package name="symlinks"/>
+        <package name="systemd-networkd"/>
+        <package name="systemd-udev"/>
+        <package name="systemd-resolved"/>
+        <package name="tar"/>
+        <package name="tcpdump"/>
+        <package name="time"/>
+        <package name="traceroute"/>
+        <package name="tree"/>
+        <package name="unzip"/>
+        <package name="usbutils"/>
+        <package name="util-linux"/>
+        <package name="vim-minimal"/>
+        <package name="wget"/>
+        <package name="which"/>
+        <package name="whois"/>
+        <package name="wsl-setup"/>
+        <package name="zip"/>
+        <package name="zram-generator-defaults"/>
+    </packages>
+
+    <packages type="bootstrap">
+        <package name="bash"/>
+        <package name="coreutils"/>
+        <package name="dnf5"/>
+        <package name="dnf5-plugins"/>
+        <package name="azurelinux-release-wsl"/>
+        <package name="rpm"/>
+    </packages>
+
+    <!--
+        Variant-scoped repos package: governs the .repo files written
+        into /etc/yum.repos.d/ in the built image (runtime). The two
+        packages conflict, so they're separated into per-variant sections.
+    -->
+    <packages type="bootstrap" profiles="wsl-dev">
+        <package name="azurelinux-repos-dev"/>
+    </packages>
+    <packages type="bootstrap" profiles="wsl">
+        <package name="azurelinux-repos"/>
+    </packages>
+</image>

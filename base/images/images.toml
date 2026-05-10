@@ -121,6 +121,30 @@ definition = { type = "kiwi", path = "vm-iso-installer/vm-iso-installer.kiwi", p
 # Test suites
 # ============================================================================
 
+[test-suites.lisa-main]
+type = "lisa"
+description = "Lisa tests which are run by default"
+
+[test-suites.lisa-xfs]
+type = "lisa"
+description = "Lisa xfs tests"
+
+[test-suites.lisa-perf]
+type = "lisa"
+description = "Lisa perf tests"
+
+[test-suites.lisa-smoke]
+type = "lisa"
+description = "Lisa smoke tests"
+
+[test-suites.lisa-cvm]
+type = "lisa"
+description = "Lisa cvm tests"
+
+[test-suites.lisa-kernel-ltp]
+type = "lisa"
+description = "Lisa kernel LTP tests"
+
 # Single shared pytest suite for static (offline) image validation.
 [test-suites.static-image-checks]
 type = "pytest"

@@ -110,14 +110,15 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--scratch-build",
         action="store_true",
-        default=True,
-        help="Submit as a scratch build (default: true).",
+        default=False,
+        help="Submit as a scratch build (default: false / official build).",
     )
     parser.add_argument(
         "--no-scratch-build",
         action="store_false",
         dest="scratch_build",
-        help="Submit as a non-scratch (official) build.",
+        help="Submit as a non-scratch (official) build. This is the default; "
+        "flag exists for symmetry with --scratch-build.",
     )
     parser.add_argument(
         "--poll-interval-seconds",

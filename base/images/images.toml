@@ -32,7 +32,14 @@
 [images.vm-base]
 description = "VM Base Image"
 definition = { type = "kiwi", path = "vm-base/vm-base.kiwi", profile = "vm-base" }
-tests.test-suites = [{ name = "static-image-checks" }]
+tests.test-suites = [
+  { name = "static-image-checks" },
+  { name = "lisa-main" },
+  { name = "lisa-xfs" },
+  { name = "lisa-perf" },
+  { name = "lisa-smoke" },
+  { name = "lisa-kernel-ltp" },
+]
 
 [images.vm-base.capabilities]
 machine-bootable = true
@@ -52,16 +59,6 @@ systemd = true
 runtime-package-management = true
 
 # ---- container-base (core profile) -------------------------------------
-
-[images.vm-base.tests]
-test-suites = [
-  { name = "lisa-main" },
-  { name = "lisa-xfs" },
-  { name = "lisa-perf" },
-  { name = "lisa-smoke" },
-  { name = "lisa-kernel-ltp" },
-]
-
 [images.container-base]
 description = "Container Base Image"
 definition = { type = "kiwi", path = "container-base/container-base.kiwi", profile = "core" }
